@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: ckanext-geoserver
+Version: 0.0.1
+Summary: API for adding Geoserver compatibility and functionality to CKAN.
+Home-page: http://www.geothermaldata.org
+Author: Arizona Geological Survey
+Author-email: adrian.sonnenschein@azgs.az.gov
+License: MIT
+Description: 
+            
+Platform: UNKNOWN
