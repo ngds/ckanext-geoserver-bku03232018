@@ -1,0 +1,27 @@
+{# ___NGDS_HEADER_BEGIN___
+
+National Geothermal Data System - NGDS
+https://github.com/ngds
+
+File: <filename>
+
+Copyright (c) 2013, Siemens Corporate Technology and Arizona Geological Survey
+
+Please Refer to the README.txt file in the base directory of the NGDS
+project:
+https://github.com/ngds/ckanext-ngds/README.txt
+
+___NGDS_HEADER_END___ #}
+
+{% extends "dataviewer/base.html" %}
+
+{% block page %}
+  <div data-module="reclinepreview" data-module-site_url="{{ h.dump_json(h.url('/', locale='default', qualified=true)) }}">
+    <h4 class="loading-dialog">
+      <div class="loading-spinner"></div>
+      <div class="left">{{ _('Loading...') }}</div>
+    </h4>
+  </div>
+
+  {% resource 'geo-reclinepreview/main' %}
+{% endblock %}

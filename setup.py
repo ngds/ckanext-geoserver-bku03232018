@@ -6,14 +6,14 @@ version = '0.0.1'
 setup(
     name='ckanext-geoserver',
     version=version,
-    description="API for adding Geoserver compatibility and functionality to CKAN.",
+    description="Interface for adding Geoserver support and functionality to CKAN.",
     long_description='''
     ''',
     classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords='',
     author='Arizona Geological Survey',
     author_email='adrian.sonnenschein@azgs.az.gov',
-    url='http://www.geothermaldata.org',
+    url='http://www.geothermaldata.gov',
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
     namespace_packages=['ckanext', 'ckanext.geoserver'],
@@ -22,9 +22,10 @@ setup(
     install_requires=[
         # -*- Extra requirements: -*-
     ],
-    entry_points='''
-        [ckan.plugins]
-        # Add plugins here, e.g.
-        # myplugin=ckanext.geoserver.plugin:PluginClass
-    ''',
+    entry_points={
+        'ckan.plugins': [
+            'geoserver=ckanext.geoserver.plugin:GeoserverPlugin',
+            'ogc_preview=ckanext.ogc-preview.plugin:OGCPreviewPlugin',
+        ]
+    }
 )
