@@ -36,26 +36,9 @@ log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
 
 
-def layer_exists(context, data_dict):
+def publish_layer(context, data_dict):
     """
-    Checks whether layer exists in the geoserver. If not then returns False.
-
-    @return: Boolean
-    """
-
-    if 'layer_name' in data_dict:
-        layer_name = _get_or_bust(data_dict, 'layer_name')
-
-    geoserver = Geoserver.from_ckan_config()
-    if geoserver.get_layer(layer_name) is None:
-        return False
-    else:
-        return True
-
-
-def publish(context, data_dict):
-    """
-    Publishes the resource details as Geoserver layer based on the input details.
+    Publishes the resource details as a Geoserver layer based on the input details.
     If the layer creation is successful then returns "Success" msg, otherwise raises an Exception.
     """
 
@@ -107,7 +90,7 @@ def publish(context, data_dict):
 
 def unpublish(context, data_dict):
     """
-    Un-publishes the geoserver layer based on the resource identifier. Retrieves the geoserver layer name and package
+    Un-publishes the Geoserver layer based on the resource identifier. Retrieves the Geoserver layer name and package
      identifier to construct layer and remove it.
     """
     resource_id = data_dict.get("resource_id")

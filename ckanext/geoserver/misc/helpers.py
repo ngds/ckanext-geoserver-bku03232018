@@ -26,7 +26,7 @@ from ckanext.ngds.env import ckan_model
 from ckan.plugins import toolkit
 from ckan.logic import NotFound
 
-def is_spatialized(resource):
+def check_published(resource):
     """
     Checks whether given resource is already spatialized. If spatialized returns True otherwise False.
     """
