@@ -1,20 +1,24 @@
-import ckan.plugins as plugins
+import logging
+import ckan.plugins as plugin
 from ckanext.ngds.geoserver.model import OGCServices as ogc
 from ckan.plugins import IResourcePreview
+import ckan.logic as logic
 
-class OGCPreviewPlugin(plugins.SingletonPlugin):
+log = logging.getLogger(__name__)
+_get_or_bust = logic.get_or_bust
+
+class OGCPreviewPlugin(plugin.SingletonPlugin):
     '''
     Take the ogc recline previewer code and make it a separate plugin.
     '''
 
-    plugins.implements(plugins.IConfigurer, inherit=True)
+    plugin.implements(plugin.IConfigurer, inherit=True)
+    plugin.implements(IResourcePreview)
 
     # Add new resource containing libraries, scripts, etc. to the global config
     def update_config(self, config):
-        plugins.toolkit.add_template_directory(config, 'geo-recline/theme/templates')
-        plugins.toolkit.add_resource('geo-recline/theme/public', 'geo-reclinepreview')
-
-    plugins.implements(IResourcePreview)
+        plugin.toolkit.add_template_directory(config, 'geo-recline/theme/templates')
+        plugin.toolkit.add_resource('geo-recline/theme/public', 'geo-reclinepreview')
 
     # If the resource protocol is a WFS, then we can preview it
     def can_preview(self, data_dict):
@@ -33,7 +37,7 @@ class OGCPreviewPlugin(plugins.SingletonPlugin):
                 resourceURL = resource.get("url", {})
                 armchair = ogc.HandleWMS(resourceURL)
                 ottoman = armchair.get_layer_info(resource)
-                this_resource = plugins.toolkit.c.resource
+                this_resource = plugin.toolkit.c.resource
                 this_resource["layer"] = ottoman["layer"]
                 this_resource["bbox"] = ottoman["bbox"]
                 this_resource["srs"] = ottoman["srs"]
@@ -44,11 +48,11 @@ class OGCPreviewPlugin(plugins.SingletonPlugin):
                 resourceURL = resource.get("url", {})
                 armchair = ogc.HandleWFS(resourceURL)
                 reclineJSON = armchair.make_recline_json(data_dict)
-                this_resource = plugins.toolkit.c.resource
+                this_resource = plugin.toolkit.c.resource
                 this_resource["reclineJSON"] = reclineJSON
                 this_resource["error"] = False
         except:
-            plugins.toolkit.c.resource["error"] = True
+            plugin.toolkit.c.resource["error"] = True
 
     # Render the jinja2 template which builds the recline preview
     def preview_template(self, context, data_dict):

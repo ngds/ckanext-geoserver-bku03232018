@@ -1,30 +1,6 @@
-""" NGDS_HEADER_BEGIN
-
-National Geothermal Data System - NGDS
-https://github.com/ngds
-
-File: <filename>
-
-Copyright (c) 2014, Siemens Corporate Technology and Arizona Geological Survey
-
-Please refer the the README.txt file in the base directory of the NGDS project:
-https://github.com/ngds/ckanext-ngds/blob/master/README.txt
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero
-General Public License as published by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.  https://github.com/ngds/ckanext-ngds
-ngds/blob/master/LICENSE.md or
-http://www.gnu.org/licenses/agpl.html
-
-NGDS_HEADER_END """
-
 import logging
 
-import ckan.plugins as plugins
+import ckan.plugins as plugin
 from ckan.plugins import ITemplateHelpers, IRoutes
 import ckanext.ngds.geoserver.logic.action as action
 import ckanext.datastore.logic.auth as auth
@@ -35,6 +11,7 @@ log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
 
 class GeoserverPlugin(plugins.SingletonPlugin):
+
     '''
     Geoserver plugin.
     
@@ -45,12 +22,12 @@ class GeoserverPlugin(plugins.SingletonPlugin):
     
     Connect to Geoserver means:
     1. Create a select statement
-    2. Use the geoserver API to create a new layer using that select statement 
-     
+    2. Use the geoserver API to create a new layer using that select statement
     '''
 
-    plugins.implements(plugins.IActions)
-    plugins.implements(plugins.IAuthFunctions)
+    plugin.implements(plugin.IActions)
+    plugin.implements(plugin.IAuthFunctions)
+    plugin.implements(ITemplateHelpers, inherit=True)
 
     # Functionality that this plugin provides through the Action API
     def get_actions(self):
@@ -77,8 +54,6 @@ class GeoserverPlugin(plugins.SingletonPlugin):
             'geoserver_create_store': auth.datastore_create,
             'geoserver_delete_store': auth.datastore_delete,
         }
-
-    plugins.implements(ITemplateHelpers, inherit=True)
 
     def get_helpers(self):
 
