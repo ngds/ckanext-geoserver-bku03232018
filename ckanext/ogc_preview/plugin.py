@@ -1,7 +1,7 @@
 import logging
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
-from ckanext.ngds.geoserver.model import OGCServices as ogc
+from ckanext.geoserver.model import ProcessOGC as ogc
 import ckan.logic as logic
 
 log = logging.getLogger(__name__)

@@ -1,7 +1,7 @@
 from geoserver.support import url
-from ckanext.ngds.geoserver.model.Geoserver import Geoserver
-from ckanext.ngds.geoserver.model.Datastored import Datastored
-from ckanext.ngds.geoserver.model.ShapeFile import Shapefile
+from ckanext.geoserver.model.Geoserver import Geoserver
+from ckanext.geoserver.model.Datastored import Datastored
+from ckanext.geoserver.model.ShapeFile import Shapefile
 from ckan.plugins import toolkit
 from pylons import config
 import json
@@ -15,7 +15,7 @@ class Layer(object):
     """
 
     @classmethod
-    def publish(cls, package_id, resource_id, layer_name, username, store=None, workspace=None, geoserver,
+    def publish(cls, package_id, resource_id, layer_name, username, geoserver, store=None, workspace=None,
                 lat_field=None, lng_field=None):
         """
         Publishes a layer as WMS and WFS OGC services in Geoserver.  Calls the 'Layer' class before the object
@@ -27,7 +27,7 @@ class Layer(object):
         else:
             return None
     # Define properties of the object instance which will be passed into the class method
-    def __init__(self, package_id, resource_id, layer_name, username, store=None, workspace=None, geoserver,
+    def __init__(self, package_id, resource_id, layer_name, username, geoserver, store=None, workspace=None,
                  lat_field=None, lng_field=None):
         self.geoserver = Geoserver.from_ckan_config()
         self.name = layer_name

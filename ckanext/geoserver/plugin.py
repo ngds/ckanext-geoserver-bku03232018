@@ -2,15 +2,15 @@ import logging
 
 import ckan.plugins as plugin
 from ckan.plugins import ITemplateHelpers, IRoutes
-import ckanext.ngds.geoserver.logic.action as action
+import ckanext.geoserver.logic.action as action
 import ckanext.datastore.logic.auth as auth
 import ckan.logic as logic
-import ckanext.ngds.geoserver.misc.helpers as helpers
+import ckanext.geoserver.misc.helpers as helpers
 
 log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
 
-class GeoserverPlugin(plugins.SingletonPlugin):
+class GeoserverPlugin(plugin.SingletonPlugin):
 
     '''
     Geoserver plugin.
