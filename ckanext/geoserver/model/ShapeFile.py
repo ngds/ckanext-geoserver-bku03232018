@@ -6,7 +6,6 @@ from re import search
 from ckanext.ngds.ngdsui.misc.helpers import file_path_from_url
 from pylons import config
 from ckan.plugins import toolkit
-import ckan.plugins as p
 
 class Shapefile(object):
     resource = {}

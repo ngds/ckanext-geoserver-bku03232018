@@ -175,6 +175,7 @@ class Layer(object):
             'description': 'WMS for %s' % self.file_resource['name'],
             'distributor': self.file_resource.get("distributor", json.dumps({"name": "Unknown", "email": "unknown"})),
             'protocol': 'OGC:WMS',
+            'format': 'OGC:WMS',
             'feature_type':"%s:%s" % (self.store.workspace.name, self.name),
             'resource_format': 'data-service',
         }
@@ -188,6 +189,7 @@ class Layer(object):
             "description": "WFS for %s" % self.file_resource["name"],
             'distributor': self.file_resource.get("distributor", json.dumps({"name": "Unknown", "email": "unknown"})),
             "protocol": "OGC:WFS",
+            "format": "OGC:WFS",
             "feature_type":"%s:%s" % (self.store.workspace.name, self.name),
             'resource_format': 'data-service',
         })
