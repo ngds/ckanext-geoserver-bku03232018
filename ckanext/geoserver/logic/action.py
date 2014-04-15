@@ -1,34 +1,12 @@
-""" NGDS_HEADER_BEGIN
-
-National Geothermal Data System - NGDS
-https://github.com/ngds
-
-File: <filename>
-
-Copyright (c) 2014, Siemens Corporate Technology and Arizona Geological Survey
-
-Please refer the the README.txt file in the base directory of the NGDS project:
-https://github.com/ngds/ckanext-ngds/blob/master/README.txt
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero
-General Public License as published by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.  https://github.com/ngds/ckanext-ngds
-ngds/blob/master/LICENSE.md or
-http://www.gnu.org/licenses/agpl.html
-
-NGDS_HEADER_END """
-
 import logging
 import ckan.logic as logic
-from ckanext.ngds.geoserver.model.Geoserver import Geoserver
-from ckanext.ngds.geoserver.model.Layer import Layer
-from ckanext.ngds.geoserver.model.OGCServices import HandleWMS
+from ckanext.geoserver.model.Geoserver import Geoserver
+from ckanext.geoserver.model.Layer import Layer
+from ckanext.geoserver.model.OGCServices import HandleWMS
 from ckan.plugins import toolkit
-from ckanext.ngds.env import ckan_model, h, _
+from pylons.i18n import _
+import ckan.lib.helpers as h
+from ckan import model
 import socket
 
 
@@ -49,7 +27,6 @@ def publish_layer(context, data_dict):
     package_id = data_dict.get("package_id", None)
     lat_field = data_dict.get("col_latitude", None)
     lng_field = data_dict.get("col_longitude", None)
-    geoserver_layer_name = data_dict.get("gs_lyr_name", None)
     datastore = data_dict.get("geoserver_datastore", None)
 
     # Check that you have everything you need
@@ -58,37 +35,28 @@ def publish_layer(context, data_dict):
 
     # Publish a layer
     def pub():
-        if geoserver_layer_name is not None:
-            l = Layer.publish(package_id, resource_id, geoserver_layer_name, username, datastore, lat_field=lat_field,
+        layer = Layer.publish(package_id, resource_id, layer_name, username, datastore, lat_field=lat_field,
                               lng_field=lng_field)
-            return l
-        else:
-            l = Layer.publish(package_id, resource_id, layer_name, username, datastore, lat_field=lat_field,
-                              lng_field=lng_field)
-            return l
+        return layer
 
     try:
         l = pub()
         if l is None:
-            h.flash_error(
-                _(
-                    "Failed to generate a geoserver layer. Please contact the site administrator if this problem persists."))
+            h.flash_error(_("Failed to generate a Geoserver layer."))
             raise Exception(toolkit._("Layer generation failed"))
         else:
             # csv content should be spatialized or a shapefile uploaded, Geoserver updated, resources appended.
             #  l should be a Layer instance. Return whatever you wish to
-            h.flash_success(
-                _("This resource has successfully been published as an OGC service."))
+            h.flash_success(_("This resource has successfully been published as an OGC service."))
             return "Success"
     except socket.error:
-        h.flash_error(
-            _("Error connecting to geoserver. Please contact the site administrator if this problem persists."))
+        h.flash_error(_("Error connecting to Geoserver."))
 
 
         # Confirm that everything went according to plan
 
 
-def unpublish(context, data_dict):
+def unpublish_layer(context, data_dict):
     """
     Un-publishes the Geoserver layer based on the resource identifier. Retrieves the Geoserver layer name and package
      identifier to construct layer and remove it.
@@ -97,26 +65,16 @@ def unpublish(context, data_dict):
     layer_name = data_dict.get("layer_name")
     layer_name = "NGDS:" + resource_id
     username = context.get('user')
-    geoserver_layer_name = data_dict.get("gs_lyr_name", None)
     file_resource = toolkit.get_action("resource_show")(None, {"id": resource_id})
-
-    if not layer_name:
-        resource = ckan_model.Resource.get(resource_id)
 
     geoserver = Geoserver.from_ckan_config()
 
-    package_id = ckan_model.Resource.get(resource_id).resource_group.package_id
+    package_id = model.Resource.get(resource_id).resource_group.package_id
 
     def unpub():
-        if geoserver_layer_name is not None:
-            layer = Layer(geoserver=geoserver, layer_name=geoserver_layer_name, resource_id=resource_id,
-                          package_id=package_id, username=username)
-            return layer
-        else:
-            layer = Layer(geoserver=geoserver, layer_name=layer_name, resource_id=resource_id,
-                          package_id=package_id,
-                          username=username)
-            return layer
+        layer = Layer(geoserver=geoserver, layer_name=layer_name, resource_id=resource_id, package_id=package_id,
+                      username=username)
+        return layer
 
     try:
         layer = unpub()

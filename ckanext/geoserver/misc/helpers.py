@@ -1,30 +1,10 @@
-""" NGDS_HEADER_BEGIN
-
-National Geothermal Data System - NGDS
-https://github.com/ngds
-
-File: <filename>
-
-Copyright (c) 2014, Siemens Corporate Technology and Arizona Geological Survey
-
-Please refer the the README.txt file in the base directory of the NGDS project:
-https://github.com/ngds/ckanext-ngds/blob/master/README.txt
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero
-General Public License as published by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.  https://github.com/ngds/ckanext-ngds
-ngds/blob/master/LICENSE.md or
-http://www.gnu.org/licenses/agpl.html
-
-NGDS_HEADER_END """
-
-from ckanext.ngds.env import ckan_model
+import re
+import urllib2
+from ckan import model
 from ckan.plugins import toolkit
 from ckan.logic import NotFound
+from ckan.controllers import storage
+from pylons import config
 
 def check_published(resource):
     """
@@ -32,8 +12,8 @@ def check_published(resource):
     """
     spatialized = False
     resource_id = resource['id']
-    package_id=ckan_model.Resource.get(resource_id).resource_group.package_id
-    package = ckan_model.Package.get(package_id)
+    package_id = model.Resource.get(resource_id).resource_group.package_id
+    package = model.Package.get(package_id)
     for resource in package.resources:
         if 'protocol' in resource.extras and 'parent_resource' in resource.extras:
             extras = resource.extras
@@ -50,3 +30,20 @@ def check_published(resource):
                 spatialized = True
                 break
     return spatialized
+
+def file_path_from_url(url):
+    """
+    Given a file's URL, find the file itself on this system
+    """
+
+    pattern = "^(?P<protocol>.+?)://(?P<host>.+?)/.+/(?P<label>\d{4}-.+)$"
+    label = re.match(pattern, url).group("label")
+    return get_url_for_file(urllib2.unquote(label))
+
+def get_url_for_file(label):
+    """
+    Returns the URL for a file given it's label.
+    """
+    bucket = config.get('ckan.storage.bucket', 'default')
+    ofs = storage.get_ofs()
+    return ofs.get_url(bucket, label).replace("file://", "")

@@ -25,7 +25,7 @@ setup(
     entry_points={
         'ckan.plugins': [
             'geoserver=ckanext.geoserver.plugin:GeoserverPlugin',
-            'ogc_preview=ckanext.ogc-preview.plugin:OGCPreviewPlugin',
+            'ogc_preview=ckanext.ogc_preview.plugin:OGCPreviewPlugin',
         ]
     }
 )

@@ -1,29 +1,5 @@
-""" NGDS_HEADER_BEGIN
-
-National Geothermal Data System - NGDS
-https://github.com/ngds
-
-File: <filename>
-
-Copyright (c) 2014, Siemens Corporate Technology and Arizona Geological Survey
-
-Please refer the the README.txt file in the base directory of the NGDS project:
-https://github.com/ngds/ckanext-ngds/blob/master/README.txt
-
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero
-General Public License as published by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
-even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.  https://github.com/ngds/ckanext-ngds
-ngds/blob/master/LICENSE.md or
-http://www.gnu.org/licenses/agpl.html
-
-NGDS_HEADER_END """
-
 from geoserver.catalog import Catalog
-from pylons import config as ckan_config
+from pylons.config import config
 import re
 
 class Geoserver(Catalog):
@@ -36,7 +12,7 @@ class Geoserver(Catalog):
         @param cls: This class.
         @return: a Geoserver catalog
         """
-        url = ckan_config.get("geoserver.rest_url", "http://localhost:8080/geoserver/rest")
+        url = config.get("geoserver.rest_url", "http://localhost:8080/geoserver/rest")
 
         # Look for user information in the geoserver url
         userInfo = re.search("://(?P<auth>(?P<user>.+?):(?P<pass>.+?)@)?.+", url)
@@ -60,56 +36,35 @@ class Geoserver(Catalog):
         @return: workspace instance
         """
 
-        name = ckan_config.get("geoserver.workspace_name", "ngds")
-        uri = ckan_config.get("geoserver.workspace_uri", "http://localhost:5000/ngds")
+        name = config.get("geoserver.workspace_name", "ckan")
+        uri = config.get("geoserver.workspace_uri", "http://localhost/ckan")
 
         ngds_workspace = self.get_workspace(name)
         if ngds_workspace is None:
             ngds_workspace = self.create_workspace(name, uri)
         return ngds_workspace
 
-    def default_datastore(self):
+    def get_datastore(self, workspace=None, store_name=None):
         """
-        Get default datastore, create if it does not exist
-
-        @return: datastore instance
+        Make a connection to the datastore, create the datastore if it does not exist.  The database we point to will
+        be CKAN's datastore database in most cases because that's where all of our uploaded files wind up.  Otherwise,
+        specify the name of the database you want to make a connection with through the 'store_name' argument.
         """
 
-        # Extract values from development.ini file
-        datastore_url = ckan_config.get('ckan.datastore.write_url','postgresql://ckanuser:pass@localhost/datastore')
+        # Extract values from ckan config file
+        datastore_url = config.get('ckan.datastore.write_url','postgresql://ckanuser:pass@localhost/datastore')
 
         # Extract connection details
         pattern = "://(?P<user>.+?):(?P<pass>.+?)@(?P<host>.+?)/(?P<database>.+)$"
         details = re.search(pattern, datastore_url)
 
-        # Check if the default datastore exists
-        store_name = details.group("database")
-        default_ws = self.default_workspace()
-        try:
-            ds = self.get_store(store_name, default_ws)
-        except Exception as ex:
-            # Doesn't exist. Create it and update the connection parameters
-            ds = self.create_datastore(store_name, default_ws)
-            ds.connection_parameters.update(
-                host=details.group("host"),
-                port="5432",
-                database=details.group("database"),
-                user=details.group("user"),
-                passwd=details.group("pass"),
-                dbtype="postgis"
-            )
-            self.save(ds)
-
-        # Return it
-        return ds
-
-    def get_datastore(self, name, store_name=None):
-        datastore_url = ckan_config.get('ckan.datastore.write_url','postgresql://ckanuser:pass@localhost/datastore')
-        pattern = "://(?P<user>.+?):(?P<pass>.+?)@(?P<host>.+?)/(?P<database>.+)$"
-        details = re.search(pattern, datastore_url)
-        workspace = self.get_workspace(name)
+        # Give a name to the workspace and specify the datastore
+        if workspace is None:
+            workspace = self.default_workspace()
         if store_name is None:
             store_name = details.group("database")
+
+        # Check if the datastore exists, create if it does not exist
         try:
             ds = self.get_store(store_name, workspace)
         except Exception as ex:
@@ -123,4 +78,6 @@ class Geoserver(Catalog):
                 dbtype="postgis"
             )
             self.save(ds)
+
+        # Return datastore object
         return ds
