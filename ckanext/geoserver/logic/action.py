@@ -2,7 +2,7 @@ import logging
 import ckan.logic as logic
 from ckanext.geoserver.model.Geoserver import Geoserver
 from ckanext.geoserver.model.Layer import Layer
-from ckanext.geoserver.model.OGCServices import HandleWMS
+from ckanext.geoserver.model.ProcessOGC import HandleWMS
 from ckan.plugins import toolkit
 from pylons.i18n import _
 import ckan.lib.helpers as h

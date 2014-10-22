@@ -22,10 +22,11 @@ setup(
     install_requires=[
         # -*- Extra requirements: -*-
     ],
-    entry_points={
-        'ckan.plugins': [
-            'geoserver=ckanext.geoserver.plugin:GeoserverPlugin',
-            'ogc_preview=ckanext.ogc_preview.plugin:OGCPreviewPlugin',
-        ]
-    }
+    entry_points=
+    """
+    [ckan.plugins]
+
+    # Geoserver plugin
+    geoserver=ckanext.geoserver.plugin:GeoserverPlugin
+    """,
 )

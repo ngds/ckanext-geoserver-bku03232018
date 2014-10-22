@@ -1,33 +1,25 @@
 import logging
 
-import ckan.plugins as plugin
+import ckan.plugins as p
 from ckan.plugins import ITemplateHelpers, IRoutes
 import ckanext.geoserver.logic.action as action
 import ckanext.datastore.logic.auth as auth
 import ckan.logic as logic
 import ckanext.geoserver.misc.helpers as helpers
 
+from ckanext.geoserver.model.Geoserver import Geoserver
+
 log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
 
-class GeoserverPlugin(plugin.SingletonPlugin):
+class GeoserverPlugin(p.SingletonPlugin):
 
-    '''
-    Geoserver plugin.
-    
-    This plugin provides actions to "spatialize" tables in the datastore and to connect them with the Geoserver. Spatialize 
-    means:
-    1. Create an additional column of type (PostGIS) point
-    2. Update the column with values calulated from already existing latitude/ longitude columns
-    
-    Connect to Geoserver means:
-    1. Create a select statement
-    2. Use the geoserver API to create a new layer using that select statement
-    '''
+    p.implements(p.IActions)
+    p.implements(p.IAuthFunctions)
+    p.implements(ITemplateHelpers, inherit=True)
 
-    plugin.implements(plugin.IActions)
-    plugin.implements(plugin.IAuthFunctions)
-    plugin.implements(ITemplateHelpers, inherit=True)
+    def update_config(self, config):
+        return config
 
     # Functionality that this plugin provides through the Action API
     def get_actions(self):
