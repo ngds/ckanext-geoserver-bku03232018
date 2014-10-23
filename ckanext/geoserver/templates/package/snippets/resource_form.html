@@ -1,0 +1,36 @@
+{% ckan_extends %}
+
+{#
+Need to wrap Geoserver controllers into this block because vanilla CKAN Jinja2
+templates don't provide a way to extend the resource forms without copying most
+of the template over.
+#}
+
+{% block basic_fields_format %}
+
+  {% block geoserver_controls %}
+    <div class="control-group control-full">
+      <label class="control-label" for="geoserver-control">
+        Geoserver
+      </label>
+      <div class="controls">
+        <div id="geoserver-control">
+          <button class="btn" type="button" name="geoserver-publish-wms" value="true" data-module="geoserver_resource_form">Publish WMS</button>
+          <button class="btn" type="button" name="geoserver-publish-wfs" value="true" data-module="geoserver_resource_form">Publish WFS</button>
+        </div>
+      </div>
+    </div>
+
+    {% resource "geoserver/geoserver_resource_form.js" %}
+  {% endblock %}
+
+
+  {% set format_attrs = {'data-module': 'autocomplete', 'data-module-source': '/api/2/util/resource/format_autocomplete?incomplete=?'} %}
+  {% call form.input('format', id='field-format', label=_('Format'), placeholder=_('eg. CSV, XML or JSON'), value=data.format, error=errors.format, classes=['control-medium'], attrs=format_attrs) %}
+    <span class="info-block info-block-small">
+      <i class="icon-info-sign"></i>
+      {{ _('This will be guessed automatically. Leave blank if you wish') }}
+    </span>
+  {% endcall %}
+
+{% endblock %}

@@ -1,11 +1,11 @@
 import logging
 
-import ckan.plugins as p
-from ckan.plugins import ITemplateHelpers, IRoutes
 import ckanext.geoserver.logic.action as action
 import ckanext.datastore.logic.auth as auth
 import ckan.logic as logic
 import ckanext.geoserver.misc.helpers as helpers
+
+from ckanext.geoserver.common import plugins as p
 
 from ckanext.geoserver.model.Geoserver import Geoserver
 
@@ -14,12 +14,14 @@ _get_or_bust = logic.get_or_bust
 
 class GeoserverPlugin(p.SingletonPlugin):
 
+    p.implements(p.IConfigurer)
     p.implements(p.IActions)
     p.implements(p.IAuthFunctions)
-    p.implements(ITemplateHelpers, inherit=True)
+    p.implements(p.ITemplateHelpers, inherit=True)
 
     def update_config(self, config):
-        return config
+        p.toolkit.add_template_directory(config, 'templates')
+        p.toolkit.add_resource('fanstatic', 'geoserver')
 
     # Functionality that this plugin provides through the Action API
     def get_actions(self):
