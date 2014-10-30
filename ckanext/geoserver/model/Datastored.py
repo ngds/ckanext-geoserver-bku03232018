@@ -83,7 +83,7 @@ class Datastored(object):
             raise toolkit.ObjectNotFound(toolkit._("Resource not found in datastore database"))
 
         # If there is not already a geometry column...
-        if not True in { col['id'] == self.geo_col for col in fields }:
+        if not True in set( col['id'] == self.geo_col for col in fields ):
             # ... append one
             fields.append({'id': self.geo_col, 'type': u'geometry'})
 
