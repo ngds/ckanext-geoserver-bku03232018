@@ -27,14 +27,13 @@ class GeoserverPlugin(p.SingletonPlugin):
     def get_actions(self):
 
         return {
-            'geoserver_publish_layer': action.publish_layer,
-            'geoserver_unpublish_layer': action.unpublish_layer,
+            'geoserver_publish_ogc': action.publish_layer,
+            'geoserver_unpublish_ogc': action.unpublish_layer,
             'geoserver_get_wms': action.map_search_wms,
         }
 
     # Functionality for providing user authentication and authorization
     def get_auth_functions(self):
-
         return {
             'datastore_spatialize': auth.datastore_create,
             'datastore_expose_as_layer': auth.datastore_create,
@@ -50,7 +49,6 @@ class GeoserverPlugin(p.SingletonPlugin):
         }
 
     def get_helpers(self):
-
         return {
             'geoserver_check_published': helpers.check_published,
         }

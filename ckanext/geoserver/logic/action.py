@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
 
 
-def publish_layer(context, data_dict):
+def publish_ogc(context, data_dict):
     """
     Publishes the resource details as a Geoserver layer based on the input details.
     If the layer creation is successful then returns "Success" msg, otherwise raises an Exception.
@@ -56,7 +56,7 @@ def publish_layer(context, data_dict):
         # Confirm that everything went according to plan
 
 
-def unpublish_layer(context, data_dict):
+def unpublish_ogc(context, data_dict):
     """
     Un-publishes the Geoserver layer based on the resource identifier. Retrieves the Geoserver layer name and package
      identifier to construct layer and remove it.
