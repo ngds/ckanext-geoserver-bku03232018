@@ -27,8 +27,8 @@ class GeoserverPlugin(p.SingletonPlugin):
     def get_actions(self):
 
         return {
-            'geoserver_publish_ogc': action.publish_layer,
-            'geoserver_unpublish_ogc': action.unpublish_layer,
+            'geoserver_publish_ogc': action.publish_ogc,
+            'geoserver_unpublish_ogc': action.unpublish_ogc,
             'geoserver_get_wms': action.map_search_wms,
         }
 
