@@ -3,17 +3,24 @@
 ckan.module('geoserver_resource_form', function ($, _) {
   return {
     initialize: function () {
+      var form;
+
       $.proxyAll(this, /_on/);
       this.el.on('click', this._onClick);
 
-      $('#md-resource-edit').submit(function () {
-        data = obj.buildSchema();
-        form = $(this);
+      form = $('.primary .module-content').find('form');
+
+      form.submit(function () {
+        var data
+          , injection
+          ;
+
+        data = obj.publishServices();
         injection = $('<input>')
           .attr('type', 'hidden')
           .attr('name', 'md_resource')
           .val(JSON.stringify(data));
-        $('#md-resource-edit').append($(injection));
+        form.append($(injection));
       })
 
     },
@@ -27,8 +34,7 @@ ckan.module('geoserver_resource_form', function ($, _) {
       }
     },
     publishServices: function (e) {
-      console.log(e);
-      console.log($(e.form.id));
+
     }
   }
 });
