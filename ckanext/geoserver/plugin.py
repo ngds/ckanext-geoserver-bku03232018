@@ -7,7 +7,7 @@ import ckanext.geoserver.misc.helpers as helpers
 
 from ckanext.geoserver.common import plugins as p
 
-from ckanext.geoserver.model.Geoserver import Geoserver
+import logic.converters as converters
 
 log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
@@ -18,6 +18,7 @@ class GeoserverPlugin(p.SingletonPlugin):
     p.implements(p.IActions)
     p.implements(p.IAuthFunctions)
     p.implements(p.ITemplateHelpers, inherit=True)
+    p.implements(p.IDatasetForm)
 
     def update_config(self, config):
         p.toolkit.add_template_directory(config, 'templates')
@@ -31,6 +32,28 @@ class GeoserverPlugin(p.SingletonPlugin):
             'geoserver_unpublish_ogc': action.unpublish_ogc,
             'geoserver_get_wms': action.map_search_wms,
         }
+
+    def _modify_package_schema(self, schema):
+        schema['resources'].update({
+            'md_resource': [p.toolkit.get_validator('ignore_missing'),
+                            converters.convert_to_geoserver_extras]
+        })
+
+    def create_package_schema(self):
+        schema = super(GeoserverPlugin, self).create_package_schema()
+        schema = self._modify_package_schema(schema)
+        return schema
+
+    def update_package_schema(self):
+        schema = super(GeoserverPlugin, self).update_package_schema()
+        schema = self._modify_package_schema(schema)
+        return schema
+
+    def is_fallback(self):
+        return False
+
+    def package_types(self):
+        return []
 
     # Functionality for providing user authentication and authorization
     def get_auth_functions(self):

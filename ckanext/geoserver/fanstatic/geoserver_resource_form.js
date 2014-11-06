@@ -3,7 +3,12 @@
 ckan.module('geoserver_resource_form', function ($, _) {
   return {
     initialize: function () {
-      var form;
+      var form
+        , res
+        , obj
+        ;
+
+      obj = this;
 
       $.proxyAll(this, /_on/);
       this.el.on('click', this._onClick);
@@ -15,26 +20,46 @@ ckan.module('geoserver_resource_form', function ($, _) {
           , injection
           ;
 
+        res = form.find('input[name="md_resource"]').val();
+        if (res) {
+          res = JSON.parse(res);
+        }
+
         data = obj.publishServices();
+
+        res.geoserver = data;
+
         injection = $('<input>')
           .attr('type', 'hidden')
           .attr('name', 'md_resource')
-          .val(JSON.stringify(data));
+          .val(JSON.stringify(res));
         form.append($(injection));
       })
-
     },
     _onClick: function () {
       var target = $(this.el);
       if (target.hasClass('active')) {
         target.removeClass('active');
-      } else {
+        this._setPublish(false);
+      }
+      else {
         target.addClass('active');
-        this.publishServices(target);
+        this._setPublish(true);
       }
     },
-    publishServices: function (e) {
+    _setPublish: function (val) {
+      var publish;
 
+      if (val) {
+        publish = val;
+      }
+      else {
+        return publish;
+      }
+    },
+    publishServices: function () {
+      var publish = this._setPublish();
+      return {'publish_ogc': publish};
     }
   }
 });
