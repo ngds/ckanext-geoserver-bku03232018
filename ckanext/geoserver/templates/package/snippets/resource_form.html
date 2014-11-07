@@ -1,11 +1,6 @@
 {% ckan_extends %}
 
 {#
-Need to wrap Geoserver controllers into this block because vanilla CKAN Jinja2
-templates don't provide a way to extend the resource forms without copying most
-of the template over.
-#}
-
 {% block basic_fields_format %}
 
   {% block geoserver_controls %}
@@ -33,3 +28,4 @@ of the template over.
   {% endcall %}
 
 {% endblock %}
+#}

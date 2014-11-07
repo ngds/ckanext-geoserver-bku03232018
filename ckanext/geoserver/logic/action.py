@@ -9,7 +9,6 @@ import ckan.lib.helpers as h
 from ckan import model
 import socket
 
-
 log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
 
