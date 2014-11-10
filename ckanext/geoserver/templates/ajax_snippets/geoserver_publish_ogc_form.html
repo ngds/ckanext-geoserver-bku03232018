@@ -1,15 +1,38 @@
 {% block geoserver_publish_ogc_form %}
   <div id="publish_ogc_modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="publish_ogc_modal_label" aria-hidden="true">
     <div class="modal-header">
-      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-        x
-      </button>
+      <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+      <h3>Geoserver OGC Controller</h3>
     </div>
     <div class="modal-body">
+      <form class="form-horizontal">
+        <div class="control-group">
+          <label class="control-label" for="geoserver_ogc_layer">OGC Layer Name</label>
+          <div class="controls">
+            <input type="text" id="geoserver_ogc_layer">
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="geoserver_lat_field">Latitude Field</label>
+          <div class="controls">
+            <select id="geoserver_lat_field">
 
+            </select>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="geoserver_lng_field">Longitude Field</label>
+          <div class="controls">
+            <select id="geoserver_lng_field">
+
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Publish OGC Services</button>
+      </form>
     </div>
     <div class="modal-footer">
-
+      <a href="#" class="btn">Close</a>
     </div>
   </div>
 {% endblock %}
