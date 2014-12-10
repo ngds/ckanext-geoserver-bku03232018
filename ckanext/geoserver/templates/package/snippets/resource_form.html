@@ -1,6 +1,5 @@
 {% ckan_extends %}
 
-{#
 {% block basic_fields_format %}
 
   {% block geoserver_controls %}
@@ -20,12 +19,11 @@
 
 
   {% set format_attrs = {'data-module': 'autocomplete', 'data-module-source': '/api/2/util/resource/format_autocomplete?incomplete=?'} %}
-  {% call form.input('format', id='field-format', label=_('Format'), placeholder=_('eg. CSV, XML or JSON'), value=data.format, error=errors.format, classes=['control-medium'], attrs=format_attrs) %}
+  {% call form.input('format', id='field-format', label=_('Format'), placeholder=_('eg. CSV, XML or JSON'), value=data.format, error=errors.format, classes=['control-medium', 'geo-select-required'], attrs=format_attrs) %}
     <span class="info-block info-block-small">
       <i class="icon-info-sign"></i>
-      {{ _('This will be guessed automatically. Leave blank if you wish') }}
+      {{ _('Ex: CSV or ESRI or WMS or WFS or ...') }}
     </span>
   {% endcall %}
 
 {% endblock %}
-#}
