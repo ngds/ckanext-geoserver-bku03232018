@@ -43,25 +43,26 @@ ckan.module('geoserver_publish_ogc', function ($, _) {
         , fields
         , option
         , i
+	, selects
         ;
 
       obj = this;
       fields = obj.fieldnames;
 
-      $(html).modal('show');
+      //Make sure removing old modal if exists
+      $('#publish_ogc_modal').remove();
+      //append new modal into body
+      $('body').append(html);
 
-      latSelect = $(html).find('#geoserver_lat_field');
-      lngSelect = $(html).find('#geoserver_lng_field');
+      selects =  $('body').find('#geoserver_lat_field, #geoserver_lng_field');
 
       for (i = 0; i < fields.length; i++) {
-        option = $('<option></option>')
-          .attr('value', fields[i])
-          .text(fields[i])
-        ;
-
-        latSelect.append(option);
-        lngSelect.append(option);
+	selects.each(function(){
+	  $(this).append($('<option>', {value: fields[i]}).text(fields[i]));
+	});
       }
+      //show modal
+      $('#publish_ogc_modal').modal('show');
     },
     postSearch: function (id, callback) {
       var path
