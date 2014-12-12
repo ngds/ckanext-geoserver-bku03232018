@@ -5,17 +5,13 @@
       <h3>Geoserver OGC Controller</h3>
     </div>
     <div class="modal-body">
-      <form class="form-horizontal">
-        <div class="control-group">
-          <label class="control-label" for="geoserver_ogc_layer">OGC Layer Name</label>
-          <div class="controls">
-            <input type="text" id="geoserver_ogc_layer">
-          </div>
-        </div>
+	<div class="alert hide"></div>
+
+      <form class="form-horizontal" id="publish-ogc-form" data-module="geoserver_resource_form">
         <div class="control-group">
           <label class="control-label" for="geoserver_lat_field">Latitude Field</label>
           <div class="controls">
-            <select id="geoserver_lat_field">
+            <select id="geoserver_lat_field" name="geoserver_lat_field">
 
             </select>
           </div>
@@ -23,12 +19,14 @@
         <div class="control-group">
           <label class="control-label" for="geoserver_lng_field">Longitude Field</label>
           <div class="controls">
-            <select id="geoserver_lng_field">
+            <select id="geoserver_lng_field" name="geoserver_lng_field">
 
             </select>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary">Publish OGC Services</button>
+	<input type="hidden" id="resource_id" name="resource_id" value="" />
+	<input type="hidden" id="package_id" name="package_id" value="" />
+        <button type="submit" class="btn btn-primary pull-right" data-module="geoserver_resource_form">Publish OGC Services</button>
       </form>
     </div>
     <div class="modal-footer">

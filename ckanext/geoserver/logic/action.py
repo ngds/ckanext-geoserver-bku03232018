@@ -41,15 +41,20 @@ def publish_ogc(context, data_dict):
     try:
         l = pub()
         if l is None:
+	    log.debug("Failed to generate a Geoserver layer.")
             h.flash_error(_("Failed to generate a Geoserver layer."))
             raise Exception(toolkit._("Layer generation failed"))
         else:
             # csv content should be spatialized or a shapefile uploaded, Geoserver updated, resources appended.
             #  l should be a Layer instance. Return whatever you wish to
             h.flash_success(_("This resource has successfully been published as an OGC service."))
-            return "Success"
+	    log.debug("This resource has successfully been published as an OGC service.")
+            return {"success": True,
+		    "message": _("This resource has successfully been published as an OGC service.")
+		}
     except socket.error:
         h.flash_error(_("Error connecting to Geoserver."))
+	log.debug("Error connecting to Geoserver.")
 
 
         # Confirm that everything went according to plan

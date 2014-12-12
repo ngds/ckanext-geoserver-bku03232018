@@ -44,6 +44,9 @@ ckan.module('geoserver_publish_ogc', function ($, _) {
         , option
         , i
 	, selects
+	, resourceInput
+	, packageInput
+	, ogcForm
         ;
 
       obj = this;
@@ -55,14 +58,69 @@ ckan.module('geoserver_publish_ogc', function ($, _) {
       $('body').append(html);
 
       selects =  $('body').find('#geoserver_lat_field, #geoserver_lng_field');
+      resourceInput = $('body').find('#resource_id').val(obj.options.resource);
+      packageInput = $('body').find('#package_id').val(obj.options.package);
 
       for (i = 0; i < fields.length; i++) {
 	selects.each(function(){
 	  $(this).append($('<option>', {value: fields[i]}).text(fields[i]));
 	});
       }
+
       //show modal
       $('#publish_ogc_modal').modal('show');
+
+      $("#publish_ogc_modal").on('shown', function() {
+	ogcForm = $(this).find('form#publish-ogc-form');
+	
+	//bind submit event to publish OGC
+	ogcForm.submit(function(e){
+	    //publish ogc
+	    obj.postPublishOGC($(this));
+
+	    //prevent page from loading
+	    e.preventDefault();
+	    return false;
+	});
+      });
+    },
+    postPublishOGC: function(form) {
+      var data
+	, path
+	;
+
+	path = '/geoserver/publish-ogc';
+	data = form.serializeArray();
+
+	$.ajax({
+          url: path,
+          type: 'POST',
+          dataType: 'JSON',
+          data: data,
+          success: function (result) {
+
+		$('.modal-body .alert')
+                        .html(result.message)
+                        .css({'display': 'block'});
+
+		if(result.success)
+		{
+		   //Success 
+		    $('.modal-body .alert')
+                        .addClass('alert-success');
+
+		   //reload the page
+		   location.reload();
+		}
+		else
+		{
+		    //error
+		    $('.modal-body .alert')
+			.addClass('alert-error');
+		}
+          }
+      })
+
     },
     postSearch: function (id, callback) {
       var path

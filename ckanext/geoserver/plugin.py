@@ -19,10 +19,19 @@ class GeoserverPlugin(p.SingletonPlugin):
     p.implements(p.IAuthFunctions)
     p.implements(p.ITemplateHelpers, inherit=True)
     p.implements(p.IDatasetForm)
+    p.implements(p.IRoutes, inherit=True)
 
     def update_config(self, config):
         p.toolkit.add_template_directory(config, 'templates')
         p.toolkit.add_resource('fanstatic', 'geoserver')
+
+    # IRoutes
+    def before_map(self, map):
+        controller = 'ckanext.geoserver.controllers.ogc:OgcController'
+        map.connect('geoserver_publish_ogc', '/geoserver/publish-ogc', controller=controller, action='publishOGC')
+
+	return map
+
 
     # Functionality that this plugin provides through the Action API
     def get_actions(self):

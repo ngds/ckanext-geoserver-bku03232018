@@ -35,7 +35,7 @@ class Layer(object):
         self.file_resource = toolkit.get_action("resource_show")(None, {"id": resource_id})
         self.package_id = package_id
         self.resource_id = resource_id
-        self.store = geoserver.get_datastore(workspace, store)
+        self.store = self.geoserver.get_datastore(workspace, store)
 
         url = self.file_resource["url"]
         kwargs = {"resource_id": self.file_resource["id"]}

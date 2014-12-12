@@ -72,7 +72,7 @@ class Datastored(object):
 
         # Get the connection parameters for the datastore
         conn_params = {'connection_url': self.connection_url, 'resource_id': self.resource_id}
-        engine = db._get_engine(None, conn_params)
+        engine = db._get_engine(conn_params)
         connection = engine.connect()
 
         try:
