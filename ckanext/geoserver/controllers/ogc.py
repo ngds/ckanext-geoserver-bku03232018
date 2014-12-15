@@ -60,7 +60,7 @@ class OgcController(BaseController):
 	    return result
 
 	try:
-	    result = toolkit.get_action('geoserver_publish_ogc')(context, {'package_id': package_id, 'resource_id': resource_id, 'layer_name': layer_name, 'username': username, 'col_latitude': lat_field, 'lng_field': lng_field})
+	    result = toolkit.get_action('geoserver_publish_ogc')(context, {'package_id': package_id, 'resource_id': resource_id, 'layer_name': layer_name, 'username': username, 'col_latitude': lat_field, 'col_longitude': lng_field})
 	except:
 	    return {
                 'success': False,
