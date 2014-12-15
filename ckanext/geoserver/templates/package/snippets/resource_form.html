@@ -1,7 +1,8 @@
 {% ckan_extends %}
 
-{% block basic_fields_format %}
 
+{% block basic_fields_format %}
+{#
   {% block geoserver_controls %}
     <div class="control-group control-full">
       <label class="control-label" for="geoserver-control">
@@ -16,7 +17,7 @@
 
     {% resource "geoserver/geoserver_resource_form.js" %}
   {% endblock %}
-
+#}
 
   {% set format_attrs = {'data-module': 'autocomplete', 'data-module-source': '/api/2/util/resource/format_autocomplete?incomplete=?'} %}
   {% call form.input('format', id='field-format', label=_('Format'), placeholder=_('eg. CSV, XML or JSON'), value=data.format, error=errors.format, classes=['control-medium', 'geo-select-required'], attrs=format_attrs) %}
