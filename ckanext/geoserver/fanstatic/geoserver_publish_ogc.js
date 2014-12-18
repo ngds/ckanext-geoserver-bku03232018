@@ -89,6 +89,11 @@ ckan.module('geoserver_publish_ogc', function ($, _) {
 	, path
 	;
 
+	$('.modal-body .alert')
+                        .html('Loading ...')
+			.addClass('alert-info')
+                        .css({'display': 'block'});
+
 	path = '/geoserver/publish-ogc';
 	data = form.serializeArray();
 
@@ -101,7 +106,7 @@ ckan.module('geoserver_publish_ogc', function ($, _) {
 
 		$('.modal-body .alert')
                         .html(result.message)
-                        .css({'display': 'block'});
+			.removeClass('alert-info');
 
 		if(result.success)
 		{
