@@ -167,7 +167,7 @@ class Layer(object):
                 specifications = "/" + service + "?request=GetCapabilities"
                 return service_url.replace("/rest", specifications)
 
-        # WMS Resource Creation
+        # WMS Resource Creation, layer: is important for ogcpreview ext used for WMS, and feature_type is used for WFS in ogcpreview ext
         data_dict = {
             'package_id': self.package_id,
             'parent_resource': self.file_resource['id'],
@@ -177,6 +177,7 @@ class Layer(object):
             'protocol': 'OGC:WMS',
             'format': 'OGC:WMS',
             'feature_type':"%s:%s" % (self.store.workspace.name, self.name),
+	    'layer':"%s" % self.name,
             'resource_format': 'data-service',
         }
         self.wms_resource = toolkit.get_action('resource_create')(context, data_dict)
