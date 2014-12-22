@@ -1,7 +1,7 @@
 {% ckan_extends %}
 
 {% block resource_item_explore_links %}
-{% if res.format == 'CSV' %}
+{% if res.format.lower() == 'csv' %}
 <li>
   <a href="#" data-module="geoserver_publish_ogc" data-module-package="{{ pkg.id }}" data-module-resource="{{ res.id }}" id="{{ res.id }}">
     <i class="icon-globe"></i>
@@ -11,7 +11,7 @@
 {% endif %}
 <li>
   <a href="{{ url }}">
-    {% if res.has_views %}
+    {% if res.can_be_previewed %}
       <i class="icon-bar-chart"></i>
       {{ _('Preview') }}
     {% else %}
@@ -22,7 +22,7 @@
 </li>
 <li>
   <a href="{{ res.url }}" class="resource-url-analytics" target="_blank">
-    {% if res.has_views %}
+    {% if res.can_be_previewed %}
       <i class="icon-download"></i>
       {{ _('Download') }}
     {% else %}
