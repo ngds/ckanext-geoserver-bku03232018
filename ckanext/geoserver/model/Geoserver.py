@@ -27,22 +27,25 @@ class Geoserver(Catalog):
         # Make the connection
         return cls(url, username=user, password=pwd)
 
-    def default_workspace(self):
+    #Make this method to create workspace/namespace uri by given input if provided
+    def default_workspace(self, name=None, uri=None):
         """
         Get a default workspace -- create if it does not exist
 
         @return: workspace instance
         """
-
-        name = config.get("geoserver.workspace_name", "ckan")
-        uri = config.get("geoserver.workspace_uri", "http://localhost/ckan")
+	if name is None:
+            name = config.get("geoserver.workspace_name", "ckan")
+	
+	if uri is None:
+            uri = config.get("geoserver.workspace_uri", "http://localhost/ckan")
 
         ngds_workspace = self.get_workspace(name)
         if ngds_workspace is None:
             ngds_workspace = self.create_workspace(name, uri)
         return ngds_workspace
 
-    def get_datastore(self, workspace=None, store_name=None):
+    def get_datastore(self, workspace=None, store_name=None, layer_name=None, layer_version=None):
         """
         Make a connection to the datastore, create the datastore if it does not exist.  The database we point to will
         be CKAN's datastore database in most cases because that's where all of our uploaded files wind up.  Otherwise,
@@ -58,7 +61,7 @@ class Geoserver(Catalog):
 
         # Give a name to the workspace and specify the datastore
         if workspace is None:
-            workspace = self.default_workspace()
+            workspace = self.default_workspace(layer_name, layer_version)
         if store_name is None:
             store_name = details.group("database")
 

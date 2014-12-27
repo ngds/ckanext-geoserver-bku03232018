@@ -15,27 +15,28 @@ class Layer(object):
     """
 
     @classmethod
-    def publish(cls, package_id, resource_id, layer_name, username, geoserver, store=None, workspace=None,
+    def publish(cls, package_id, resource_id, layer_name, layer_version, username, geoserver, store=None, workspace=None,
                 lat_field=None, lng_field=None):
         """
         Publishes a layer as WMS and WFS OGC services in Geoserver.  Calls the 'Layer' class before the object
         instance to make a subclass via inheritance.
         """
-        layer = cls(package_id, resource_id, layer_name, username, store, workspace, geoserver, lat_field, lng_field)
+        layer = cls(package_id, resource_id, layer_name, layer_version, username, store, workspace, geoserver, lat_field, lng_field)
         if layer.create():
             return layer
         else:
             return None
     # Define properties of the object instance which will be passed into the class method
-    def __init__(self, package_id, resource_id, layer_name, username, geoserver, store=None, workspace=None,
+    def __init__(self, package_id, resource_id, layer_name, layer_version, username, geoserver, store=None, workspace=None,
                  lat_field=None, lng_field=None):
         self.geoserver = Geoserver.from_ckan_config()
         self.name = layer_name
+	self.layer_version = layer_version
         self.username = username
         self.file_resource = toolkit.get_action("resource_show")(None, {"id": resource_id})
         self.package_id = package_id
         self.resource_id = resource_id
-        self.store = self.geoserver.get_datastore(workspace, store)
+        self.store = self.geoserver.get_datastore(workspace, store, layer_name, layer_version)
 
         url = self.file_resource["url"]
         kwargs = {"resource_id": self.file_resource["id"]}

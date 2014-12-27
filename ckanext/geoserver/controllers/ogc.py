@@ -51,16 +51,17 @@ class OgcController(BaseController):
                     break
 	    resourceDescription = md_package.get('resourceDescription', {})
 	    layer = resourceDescription.get('usginContentModelLayer', resource_id)
+	    version = resourceDescription.get('usginContentModelVersion', None)
 	except:
 	    return result
 
 	layer_name = data.get("layer_name", layer)
 
-	if None in [resource_id, layer_name, username, package_id]:
+	if None in [resource_id, layer_name, username, package_id, version]:
 	    return result
 
 	try:
-	    result = toolkit.get_action('geoserver_publish_ogc')(context, {'package_id': package_id, 'resource_id': resource_id, 'layer_name': layer_name, 'username': username, 'col_latitude': lat_field, 'col_longitude': lng_field})
+	    result = toolkit.get_action('geoserver_publish_ogc')(context, {'package_id': package_id, 'resource_id': resource_id, 'layer_name': layer_name, 'username': username, 'col_latitude': lat_field, 'col_longitude': lng_field, 'layer_version': version})
 	except:
 	    return {
                 'success': False,
