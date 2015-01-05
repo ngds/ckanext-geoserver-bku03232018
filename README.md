@@ -10,12 +10,3 @@ custom configurations:
 Also requires this to be set:
 
 ckan.datastore.write_url = 'postgresql://ckanuser:pass@localhost/datastore'
-
-##Reverse Proxy
-
-If you're using reverse proxy (apache -> tomcat) to access geoserver (e.g: wms layer, creating new layers ...) add these lines
-
-geoserver.use_proxy = True
-geoserver.proxied_path = /geoserver
-
-- Don't forget to add apache config to proxy the requested link (http://yourlocal/geoserver/ckan) to tomcat (http://yourlocal:TomcatPort/geoserver/ckan)
