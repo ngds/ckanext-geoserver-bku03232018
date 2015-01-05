@@ -160,18 +160,6 @@ class Layer(object):
 
         def capabilities_url(service_url, workspace, layer, service, version):
 
-            #PROXY SETTING
-            #If geoserver is under proxy, change service_url to proxied one
-            useProxy = config.get("geoserver.use_proxy", False)
-            ProxiedPath = config.get("geoserver.proxied_path", None)
-            siteUrl = config.get("ckan.site_url", "http://127.0.0.1")
-
-            if useProxy and ProxiedPath and siteUrl:
-                #'/rest' is going to be replaced in anyways
-                service_url = siteUrl+ProxiedPath+'/rest'
-
-            #END PROXY SETTING
-
             try:
                 specifications = "/%s/ows?service=%s&version=%s&request=GetCapabilities&typeName=%s:%s" % \
                         (workspace, service, version, workspace, layer)
