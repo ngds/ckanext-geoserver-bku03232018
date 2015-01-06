@@ -188,7 +188,7 @@ class Layer(object):
         data_dict.update({
             "package_id": self.package_id,
             'parent_resource': self.file_resource['id'],
-            "url": capabilities_url(self.geoserver.service_url, self.store.workspace.name, self.name, 'WFS', '1.0.0'),
+            "url": capabilities_url(self.geoserver.service_url, self.store.workspace.name, self.name, 'WFS', '1.1.0'),
             "description": "WFS for %s" % self.file_resource["name"],
             'distributor': self.file_resource.get("distributor", json.dumps({"name": "Unknown", "email": "unknown"})),
             "protocol": "OGC:WFS",
