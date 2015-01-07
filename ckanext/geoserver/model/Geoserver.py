@@ -42,7 +42,7 @@ class Geoserver(Catalog):
 
         ngds_workspace = self.get_workspace(name)
         if ngds_workspace is None:
-            ngds_workspace = self.create_workspace(name, uri)
+            ngds_workspace = self.create_workspace(name, uri+'#'+name)
         return ngds_workspace
 
     def get_datastore(self, workspace=None, store_name=None, layer_name=None, layer_version=None):

@@ -37,6 +37,7 @@ class Layer(object):
         self.package_id = package_id
         self.resource_id = resource_id
         self.store = self.geoserver.get_datastore(workspace, store, workspace_name, layer_version)
+	self.workspace_name = workspace_name
 
         url = self.file_resource["url"]
         kwargs = {"resource_id": self.file_resource["id"]}
@@ -92,8 +93,12 @@ class Layer(object):
         # If the layer already exists in Geoserver then return it
 
         layer = self.geoserver.get_layer(self.name)
+	layer_workspace_name = None
 
-        if not layer:
+	if layer:
+	    layer_workspace_name = str(layer.resource._workspace).replace(' ','').split('@')[0]
+
+        if not layer or (layer_workspace_name and layer_workspace_name != self.workspace_name):
             #Construct layer creation request.
             feature_type_url = url(self.geoserver.service_url, [
                 "workspaces",
