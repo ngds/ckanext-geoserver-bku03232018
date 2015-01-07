@@ -57,7 +57,8 @@ class OgcController(BaseController):
 	    return result
 
 	layer_name = data.get("layer_name", layer)
-	workspace_name = state+''+layer_name
+	workspace_name = layer_name
+	layer_name = state+''+layer_name
 
 	if None in [resource_id, layer_name, username, package_id, version, state]:
 	    return result
