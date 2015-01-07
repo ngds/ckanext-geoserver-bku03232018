@@ -28,14 +28,15 @@ def publish_ogc(context, data_dict):
     lng_field = data_dict.get("col_longitude", None)
     datastore = data_dict.get("geoserver_datastore", None)
     layer_version = data_dict.get("layer_version", None)
+    workspace_name = data_dict.get("workspace_name", None)
 
     # Check that you have everything you need
-    if None in [resource_id, layer_name, username, package_id, layer_version]:
+    if None in [resource_id, layer_name, username, package_id, layer_version, workspace_name]:
         raise Exception(toolkit._("Not enough information to publish resource"))
 
     # Publish a layer
     def pub():
-        layer = Layer.publish(package_id, resource_id, layer_name, layer_version, username, datastore, lat_field=lat_field,
+        layer = Layer.publish(package_id, resource_id, workspace_name, layer_name, layer_version, username, datastore, lat_field=lat_field,
                               lng_field=lng_field)
         return layer
 

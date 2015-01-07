@@ -36,6 +36,7 @@ class OgcController(BaseController):
     	package_id = data.get("package_id", None)
     	lat_field = data.get("geoserver_lat_field", None)
     	lng_field = data.get("geoserver_lng_field", None)
+	state = data.get("geoserver_state_field", None)
 
 	#get layer from package
 	try:
@@ -56,12 +57,13 @@ class OgcController(BaseController):
 	    return result
 
 	layer_name = data.get("layer_name", layer)
+	workspace_name = state+''+layer_name
 
-	if None in [resource_id, layer_name, username, package_id, version]:
+	if None in [resource_id, layer_name, username, package_id, version, state]:
 	    return result
 
 	try:
-	    result = toolkit.get_action('geoserver_publish_ogc')(context, {'package_id': package_id, 'resource_id': resource_id, 'layer_name': layer_name, 'username': username, 'col_latitude': lat_field, 'col_longitude': lng_field, 'layer_version': version})
+	    result = toolkit.get_action('geoserver_publish_ogc')(context, {'package_id': package_id, 'resource_id': resource_id, 'workspace_name': workspace_name, 'layer_name': layer_name, 'username': username, 'col_latitude': lat_field, 'col_longitude': lng_field, 'layer_version': version})
 	except:
 	    return {
                 'success': False,
