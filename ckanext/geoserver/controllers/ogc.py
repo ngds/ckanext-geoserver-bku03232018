@@ -104,7 +104,7 @@ class OgcController(BaseController):
 
 		    #loop through all occurrences and replace one by one to add the link API Ckan-Geoserver
 		    for item in matches:
-		    	obj = obj.replace(item, newServiceUrl+urllib.quote_plus(item)+"&workspace="+workspace, 1)
+		    	obj = obj.replace(item, newServiceUrl+urllib.quote_plus(item)+"&amp;workspace="+workspace, 1)
 
                 response.content_type = 'application/xml; charset=utf-8'
                 response.headers['Content-Length'] = len(obj)
