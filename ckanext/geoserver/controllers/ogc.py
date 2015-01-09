@@ -10,6 +10,8 @@ from ckan.common import request, response
 import json
 import requests
 import urllib
+from pylons.config import config
+import re
 
 class OgcController(BaseController):
     @jsonify
@@ -79,7 +81,7 @@ class OgcController(BaseController):
     Controller object for rendering getCapabilities from geoserver. It removes (#name_workspace) from NamespaceURI
     before serving it to user
     """
-    def getCapabilitiesOGC(self):
+    def getOGCServices(self):
 
         data = clean_dict(unflatten(tuplize_dict(parse_params(request.params))))
         url = data.get('url', None)
@@ -88,7 +90,21 @@ class OgcController(BaseController):
         if url and workspace:
             try:
                 oResponse = requests.get(urllib.unquote_plus(url))
+		
+		#Replace the (#name_workspace) from NamespaceURI
                 obj = oResponse.text.replace('#'+workspace, '')
+
+		#Add API URL in all links in order to make system go through it instead of hitting geoserver direclty to remove (#name_workspace) from all ogc services XML
+		siteUrl = config.get('ckan.site_url', None)
+
+                if siteUrl:
+                    newServiceUrl = siteUrl+"/geoserver/get-ogc-services?url="
+		    match = re.compile('xlink:href=[\'|"](.*?)[\'"]')
+		    matches = match.findall(obj)
+
+		    #loop through all occurrences and replace one by one to add the link API Ckan-Geoserver
+		    for item in matches:
+		    	obj = obj.replace(item, newServiceUrl+urllib.quote_plus(item), 1)
 
                 response.content_type = 'application/xml; charset=utf-8'
                 response.headers['Content-Length'] = len(obj)

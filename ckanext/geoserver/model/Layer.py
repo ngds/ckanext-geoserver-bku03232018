@@ -182,7 +182,7 @@ class Layer(object):
 
                 if siteUrl:
 		    encodedURL = urllib.quote_plus(serviceUrl, '')
-                    newServiceUrl = siteUrl+"/geoserver/get-capabilities-ogc?url="+encodedURL+"&workspace="+self.workspace_name
+                    newServiceUrl = siteUrl+"/geoserver/get-ogc-services?url="+encodedURL+"&workspace="+self.workspace_name
 
             except:
                 return serviceUrl
