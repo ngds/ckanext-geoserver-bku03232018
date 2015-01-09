@@ -5,6 +5,7 @@ from ckanext.geoserver.model.ShapeFile import Shapefile
 from ckan.plugins import toolkit
 from pylons import config
 import json
+import urllib
 
 class Layer(object):
     """
@@ -174,11 +175,25 @@ class Layer(object):
                 specifications = "/" + service + "?request=GetCapabilities"
                 return service_url.replace("/rest", specifications)
 
+	def ckanOGCServicesURL(serviceUrl):
+            newServiceUrl = serviceUrl
+            try:
+                siteUrl = config.get('ckan.site_url', None)
+
+                if siteUrl:
+		    encodedURL = urllib.quote_plus(serviceUrl, '')
+                    newServiceUrl = siteUrl+"/geoserver/get-capabilities-ogc?url="+encodedURL+"&workspace="+self.workspace_name
+
+            except:
+                return serviceUrl
+
+            return newServiceUrl
+
         # WMS Resource Creation, layer: is important for ogcpreview ext used for WMS, and feature_type is used for WFS in ogcpreview ext
         data_dict = {
             'package_id': self.package_id,
             'parent_resource': self.file_resource['id'],
-            'url': capabilities_url(self.geoserver.service_url, self.store.workspace.name, self.name, 'WMS', '1.1.1'),
+            'url': ckanOGCServicesURL(capabilities_url(self.geoserver.service_url, self.store.workspace.name, self.name, 'WMS', '1.1.1')),
             'description': 'WMS for %s' % self.file_resource['name'],
             'distributor': self.file_resource.get("distributor", json.dumps({"name": "Unknown", "email": "unknown"})),
             'protocol': 'OGC:WMS',
@@ -186,6 +201,7 @@ class Layer(object):
             'feature_type':"%s:%s" % (self.store.workspace.name, self.name),
 	    'layer':"%s" % self.name,
             'resource_format': 'data-service',
+	    'url_ogc': capabilities_url(self.geoserver.service_url, self.store.workspace.name, self.name, 'WMS', '1.1.1'),
         }
         self.wms_resource = toolkit.get_action('resource_create')(context, data_dict)
 
@@ -193,13 +209,14 @@ class Layer(object):
         data_dict.update({
             "package_id": self.package_id,
             'parent_resource': self.file_resource['id'],
-            "url": capabilities_url(self.geoserver.service_url, self.store.workspace.name, self.name, 'WFS', '1.1.0'),
+            "url": ckanOGCServicesURL(capabilities_url(self.geoserver.service_url, self.store.workspace.name, self.name, 'WFS', '1.1.0')),
             "description": "WFS for %s" % self.file_resource["name"],
             'distributor': self.file_resource.get("distributor", json.dumps({"name": "Unknown", "email": "unknown"})),
             "protocol": "OGC:WFS",
             "format": "OGC:WFS",
             "feature_type":"%s:%s" % (self.store.workspace.name, self.name),
             'resource_format': 'data-service',
+	    'url_ogc': capabilities_url(self.geoserver.service_url, self.store.workspace.name, self.name, 'WFS', '1.1.0'),
         })
         self.wfs_resource = toolkit.get_action('resource_create')(context, data_dict)
 

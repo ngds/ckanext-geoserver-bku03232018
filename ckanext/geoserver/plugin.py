@@ -30,6 +30,8 @@ class GeoserverPlugin(p.SingletonPlugin):
         controller = 'ckanext.geoserver.controllers.ogc:OgcController'
         map.connect('geoserver_publish_ogc', '/geoserver/publish-ogc', controller=controller, action='publishOGC')
 
+	map.connect('geoserver_ogc_get_capabilities', '/geoserver/get-capabilities-ogc', controller=controller, action='getCapabilitiesOGC')
+
 	return map
 
 

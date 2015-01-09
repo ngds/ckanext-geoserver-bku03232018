@@ -1,5 +1,5 @@
 from ckan.lib.navl.dictization_functions import unflatten
-from ckan.lib.base import (request, BaseController, model, c)
+from ckan.lib.base import (request, BaseController, model, c, response, abort)
 from ckan.model.resource import Resource
 import ckanext.geoserver.logic.action as action
 from pylons.decorators import jsonify
@@ -8,6 +8,8 @@ from ckan.logic import (tuplize_dict, clean_dict, parse_params)
 from ckan.plugins import toolkit
 from ckan.common import request, response
 import json
+import requests
+import urllib
 
 class OgcController(BaseController):
     @jsonify
@@ -71,3 +73,30 @@ class OgcController(BaseController):
             }
 
 	return result
+
+
+    """
+    Controller object for rendering getCapabilities from geoserver. It removes (#name_workspace) from NamespaceURI
+    before serving it to user
+    """
+    def getCapabilitiesOGC(self):
+
+        data = clean_dict(unflatten(tuplize_dict(parse_params(request.params))))
+        url = data.get('url', None)
+	workspace = data.get('workspace', None)
+
+        if url and workspace:
+            try:
+                oResponse = requests.get(urllib.unquote_plus(url))
+                obj = oResponse.text.replace('#'+workspace, '')
+
+                response.content_type = 'application/xml; charset=utf-8'
+                response.headers['Content-Length'] = len(obj)
+                return obj.encode('utf-8')
+
+            except Exception, e:
+                msg = 'An error ocurred: [%s]' % str(e)
+                abort(500, msg)
+        else:
+            msg = 'An error ocurred: [Bad Request - Missing parameters]'
+            abort(400, msg)
