@@ -82,37 +82,60 @@ class OgcController(BaseController):
     before serving it to user
     """
     def getOGCServices(self):
-
         data = clean_dict(unflatten(tuplize_dict(parse_params(request.params))))
         url = data.get('url', None)
-	workspace = data.get('workspace', None)
+        workspace = data.get('workspace', None)
 
-        if url and workspace:
-            try:
-                oResponse = requests.get(urllib.unquote_plus(url))
-		
-		#Replace the (#name_workspace) from NamespaceURI
+        #USGIN MODEL WFS Validator add ?
+        if workspace:
+            workspace = workspace.replace('?', '')
+
+        request_ogc = data.get('request', None)
+        obj = None
+
+        try:
+            if not request_ogc or (request_ogc and request_ogc == "GetCapabilities"):
+                if url and workspace:
+                    oResponse = requests.get(urllib.unquote_plus(url))
+
+                    #Replace the (#name_workspace) from NamespaceURI
+                    obj = oResponse.text.replace('#'+workspace, '')
+
+                    #Add API URL in all links in order to make system go through it instead of hitting geoserver direclty to remove (#name_workspace) from all ogc services XML
+                    siteUrl = config.get('ckan.site_url', None)
+
+                    if siteUrl:
+                        newServiceUrl = siteUrl+"/geoserver/get-ogc-services?url="
+                        match = re.compile('xlink:href=[\'|"](.*?)[\'"]')
+                        matches = match.findall(obj)
+
+                        #loop through all occurrences and replace one by one to add the link API Ckan-Geoserver
+                        for item in matches:
+                            obj = obj.replace(item, newServiceUrl+urllib.quote_plus(item)+"&amp;workspace="+workspace, 1)
+
+                else:
+                    msg = 'An error ocurred: [Bad Request - Missing parameters]'
+                    abort(400, msg)
+
+            elif request_ogc and request_ogc == "GetFeature":
+                service = data.get('service', None)
+                typename = data.get('typename', None)
+                version = data.get('version', None)
+                maxfeatures = data.get('maxfeatures', None)
+                getFeatureURL = urllib.unquote_plus(url)+"?service=%s&request=%s&typename=%s&version=%s" % (service, request_ogc, typename, version)
+
+                if maxfeatures:
+                    getFeatureURL = getFeatureURL+"&maxfeatures=%s" % maxfeatures
+
+                oResponse = requests.get(getFeatureURL)
+
+                #Replace the (#name_workspace) from NamespaceURI
                 obj = oResponse.text.replace('#'+workspace, '')
 
-		#Add API URL in all links in order to make system go through it instead of hitting geoserver direclty to remove (#name_workspace) from all ogc services XML
-		siteUrl = config.get('ckan.site_url', None)
+            response.content_type = 'application/xml; charset=utf-8'
+            response.headers['Content-Length'] = len(obj)
+            return obj.encode('utf-8')
 
-                if siteUrl:
-                    newServiceUrl = siteUrl+"/geoserver/get-ogc-services?url="
-		    match = re.compile('xlink:href=[\'|"](.*?)[\'"]')
-		    matches = match.findall(obj)
-
-		    #loop through all occurrences and replace one by one to add the link API Ckan-Geoserver
-		    for item in matches:
-		    	obj = obj.replace(item, newServiceUrl+urllib.quote_plus(item)+"&amp;workspace="+workspace, 1)
-
-                response.content_type = 'application/xml; charset=utf-8'
-                response.headers['Content-Length'] = len(obj)
-                return obj.encode('utf-8')
-
-            except Exception, e:
-                msg = 'An error ocurred: [%s]' % str(e)
-                abort(500, msg)
-        else:
-            msg = 'An error ocurred: [Bad Request - Missing parameters]'
-            abort(400, msg)
+        except Exception, e:
+            msg = 'An error ocurred: [%s]' % str(e)
+            abort(500, msg)
