@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from geoserver.support import url
 from ckanext.geoserver.model.Geoserver import Geoserver
 from ckanext.geoserver.model.Datastored import Datastored

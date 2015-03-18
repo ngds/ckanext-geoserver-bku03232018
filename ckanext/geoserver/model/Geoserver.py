@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from geoserver.catalog import Catalog
 from pylons.config import config
 import re
