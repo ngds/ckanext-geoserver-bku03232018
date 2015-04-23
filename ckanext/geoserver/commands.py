@@ -1,6 +1,7 @@
 '''import bin.datastore_setup as setup'''
 import logging
 import json
+import pylons
 import ckan.lib.cli as cli
 from ckan.lib.base import (model, c)
 from ckan.plugins import toolkit
@@ -82,7 +83,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
                 print self.usage
                 return
 
-            package_id = self.args[1]
+            package_id = u'' + self.args[1]
 
             self.publish_ogc(package_id)
         else:
@@ -95,27 +96,28 @@ class SetupDatastoreCommand(cli.CkanCommand):
         Publish dataset wms/wfs resources to geoserver
         ''' 
 
+        context = {
+            'user': u'admin',
+        }
+
 	result = {
             'success': False,
             'message': toolkit._("Not enough information to publish this resource.")
         }
 
 
-        # set other api call  
-    	username    = 'admin'#context.get("user", None)
-    	lat_field   = 'LatDegree'
-    	lng_field   = 'LongDegree' 
-	state       = 'AL' 
-
+        # set other api call parameters 
+    	username    = context.get("user", None)
+    	lat_field   = u'LatDegree'
+    	lng_field   = u'LongDegree'
 
         # get usgin csv resouce id
-        pkg         = toolkit.get_action('package_show')(None, {'id': package_id})
+        pkg         = toolkit.get_action('package_show')(context, {'id': package_id})
 	resources   = pkg.get('resources', [])
 
         for resource in resources:
             if resource['format'].lower() == 'csv':
-                resource_id = resource['id']
-                layer_name  = resource['layer_name']
+                resource_id = u'' + resource['id']
                 break
 
 	# get layer from package
@@ -136,17 +138,8 @@ class SetupDatastoreCommand(cli.CkanCommand):
 	except:
 	    return result
 
-
-	workspace_name = state + '' + layer_name
-        pp.pprint('DEBUG#20')
-        pp.pprint(package_id)
-        pp.pprint(resource_id)
-        pp.pprint(workspace_name)
-        pp.pprint(layer_name)
-        pp.pprint(username)
-        pp.pprint(lat_field)
-        pp.pprint(lng_field)
-        pp.pprint(version)
+        layer_name     = layer
+	workspace_name = package_id + '-' + layer_name
 
 	try:
 	    result = toolkit.get_action('geoserver_publish_ogc')(context, {

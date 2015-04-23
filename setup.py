@@ -28,5 +28,8 @@ setup(
 
     # Geoserver plugin
     geoserver=ckanext.geoserver.plugin:GeoserverPlugin
+
+    [paste.paster_command]
+    geoserver=ckanext.geoserver.commands:SetupDatastoreCommand
     """,
 )
