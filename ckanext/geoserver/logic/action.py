@@ -8,6 +8,7 @@ from pylons.i18n import _
 import ckan.lib.helpers as h
 from ckan import model
 import socket
+import sys
 
 log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
@@ -29,34 +30,42 @@ def publish_ogc(context, data_dict):
     datastore = data_dict.get("geoserver_datastore", None)
     layer_version = data_dict.get("layer_version", None)
     workspace_name = data_dict.get("workspace_name", None)
+    api_call_type = context.get("api_call_type", "ui")
+
 
     # Check that you have everything you need
     if None in [resource_id, layer_name, username, package_id, layer_version, workspace_name]:
         raise Exception(toolkit._("Not enough information to publish resource"))
 
+
     # Publish a layer
     def pub():
         layer = Layer.publish(package_id, resource_id, workspace_name, layer_name, layer_version, username, datastore, lat_field=lat_field,
                               lng_field=lng_field)
+
         return layer
 
     try:
         l = pub()
         if l is None:
 	    log.debug("Failed to generate a Geoserver layer.")
-            h.flash_error(_("Failed to generate a Geoserver layer."))
+            if api_call_type == 'ui':
+                h.flash_error(_("Failed to generate a Geoserver layer."))
             raise Exception(toolkit._("Layer generation failed"))
         else:
             # csv content should be spatialized or a shapefile uploaded, Geoserver updated, resources appended.
             #  l should be a Layer instance. Return whatever you wish to
-            h.flash_success(_("This resource has successfully been published as an OGC service."))
 	    log.debug("This resource has successfully been published as an OGC service.")
+            if api_call_type == 'ui':
+                h.flash_success(_("This resource has successfully been published as an OGC service."))
             return {"success": True,
 		    "message": _("This resource has successfully been published as an OGC service.")
 		}
     except socket.error:
-        h.flash_error(_("Error connecting to Geoserver."))
 	log.debug("Error connecting to Geoserver.")
+
+        if api_call_type == 'ui':
+            h.flash_error(_("Error connecting to Geoserver."))
 
 
         # Confirm that everything went according to plan
@@ -71,6 +80,7 @@ def unpublish_ogc(context, data_dict):
     layer_name = data_dict.get("layer_name")
     layer_name = "NGDS:" + resource_id
     username = context.get('user')
+    api_call_type = data_dict.get("api_call_type", "ui")
     file_resource = toolkit.get_action("resource_show")(None, {"id": resource_id})
 
     geoserver = Geoserver.from_ckan_config()
@@ -85,13 +95,17 @@ def unpublish_ogc(context, data_dict):
     try:
         layer = unpub()
     except socket.error:
-        h.flash_error(
-            _("Error connecting to geoserver. Please contact the site administrator if this problem persists."))
+        log.debug("Error connecting to geoserver. Please contact the site administrator if this problem persists.")
+        if api_call_type == 'ui':
+            h.flash_error(
+                _("Error connecting to geoserver. Please contact the site administrator if this problem persists."))
         return False
 
     layer.remove()
-    h.flash_success(
-        _("This resource has successfully been unpublished."))
+    log.debug("This resource has successfully been unpublished.")
+    if api_call_type == 'ui':
+        h.flash_success(
+            _("This resource has successfully been unpublished."))
     return True
 
 def map_search_wms(context, data_dict):
