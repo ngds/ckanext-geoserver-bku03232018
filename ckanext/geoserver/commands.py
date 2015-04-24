@@ -11,7 +11,6 @@ pp = pprint.PrettyPrinter(indent=4)
 
 log = logging.getLogger(__name__)
 
-
 class SetupDatastoreCommand(cli.CkanCommand):
     '''Perform commands to set up the datastore.
     Make sure that the datastore urls are set properly before you run these commands.
@@ -98,6 +97,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
 
         context = {
             'user': u'admin',
+            'api_call_type' : u'paster',
         }
 
 	result = {
@@ -139,7 +139,8 @@ class SetupDatastoreCommand(cli.CkanCommand):
 	    return result
 
         layer_name     = layer
-	workspace_name = package_id + '-' + layer_name
+	#workspace_name = package_id + '-' + layer_name
+	workspace_name = u'' + package_id + '-' + layer_name
 
 	try:
 	    result = toolkit.get_action('geoserver_publish_ogc')(context, {
@@ -151,13 +152,14 @@ class SetupDatastoreCommand(cli.CkanCommand):
                 'col_latitude'   : lat_field, 
                 'col_longitude'  : lng_field, 
                 'layer_version'  : version})
+
+            #log.debug("Dataset: " + package_id + " has been successfully published to the GeoServer" )
+            print "Dataset: " + package_id + " has been successfully published to the GeoServer"
+
 	except:
-            pp.pprint('DEBUG-FAIL')
-	    return {
+	    error = {
                 'success': False,
                 'message': toolkit._("An error occured while processing your request, please contact your administrator.")
             }
-
-	return result
-
-
+            #log.debug("An error occured while processing your request, please contact your administrator.")
+            print "An error occured while processing your request, please contact your administrator."
