@@ -7,6 +7,7 @@ from ckan.lib.base import (model, c)
 from ckan.plugins import toolkit
 
 import pprint
+import sys
 pp = pprint.PrettyPrinter(indent=4)
 
 log = logging.getLogger(__name__)
@@ -85,6 +86,8 @@ class SetupDatastoreCommand(cli.CkanCommand):
             package_id = u'' + self.args[1]
 
             self.publish_ogc(package_id)
+        elif cmd == 'publish-ogc-all':
+            self.publish_ogc_all()
         else:
             print self.usage
             log.error('Command "%s" not recognized' % (cmd,))
@@ -163,3 +166,29 @@ class SetupDatastoreCommand(cli.CkanCommand):
             }
             #log.debug("An error occured while processing your request, please contact your administrator.")
             print "An error occured while processing your request, please contact your administrator."
+    
+    def publish_ogc_all(self):
+        '''
+        Publish dataset wms/wfs resources to geoserver for all datasets
+        that that have a valid usgin csv resource and. This command
+        will not publish wmf/wfs resources to geoserver if a publishing 
+        action has been performed before
+        ''' 
+        # get all usgin datasets that have not been published yet
+        sql="SELECT DISTINCT package.id AS package_id \
+             FROM package, \
+                 package_extra, \
+                 resource_group, \
+                 resource \
+             WHERE package.id = package_extra.package_id \
+             AND package.state='active' \
+             AND package_extra.value LIKE '%usginContentModel%' \
+             AND resource_group.package_id=package.id \
+             AND resource_group.id = resource.resource_group_id \
+             GROUP BY package.id \
+             HAVING COUNT(resource.id)=1;"
+
+        rows = model.Session.execute(sql)
+
+        for row in rows:
+            self.publish_ogc(row.package_id)
