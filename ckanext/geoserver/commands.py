@@ -2,13 +2,19 @@
 import logging
 import json
 import pylons
-import ckan.lib.cli as cli
-from ckan.lib.base import (model, c)
-from ckan.plugins import toolkit
-
+import redis
 import pprint
 import sys
-pp = pprint.PrettyPrinter(indent=4)
+import ckan.lib.cli as cli
+from ckan.lib.base import (model, c, config)
+from ckan.plugins import toolkit
+
+HOSTNAME   = 'localhost'
+REDIS_PORT = 6379
+REDIS_DB   = 0
+
+
+#pp = pprint.PrettyPrinter(indent=4)
 
 log = logging.getLogger(__name__)
 
@@ -88,6 +94,10 @@ class SetupDatastoreCommand(cli.CkanCommand):
             self.publish_ogc(package_id)
         elif cmd == 'publish-ogc-all':
             self.publish_ogc_all()
+        elif cmd == 'publish-ogc-worker':
+            self.publish_ogc_worker()
+        elif cmd == 'publish-ogc-redis-queue':
+            self.publish_ogc_redis_queue()
         else:
             print self.usage
             log.error('Command "%s" not recognized' % (cmd,))
@@ -198,3 +208,68 @@ class SetupDatastoreCommand(cli.CkanCommand):
 
         for row in rows:
             self.publish_ogc(row.package_id)
+
+    def publish_ogc_worker(self):
+        '''
+        Publish dataset wms/wfs to geoserver by pop-ing
+        an element (dataset id) from the publis_ogc_queue(redis)
+        ''' 
+        r = self._redis_connection()
+
+        # POP an element (package_id) from publis_ogc_queue and publish it to ogc
+        package_id = r.lpop('publish_ogc_queue') 
+
+        try:
+            self.publish_ogc(package_id)
+        except:
+            print 'An Error has occured while publishing dataset:' + package_id + ' to GeoServer'
+
+    def publish_ogc_redis_queue(self):
+        '''
+        Create the pubusish_ogc_queue by querying the db
+        for datasets that require ogc publishing
+        ''' 
+
+        # todo: check config for backend redis/rabbitmq
+        # get all usgin datasets that have not been published yet
+        sql="""
+        SELECT DISTINCT package.id AS package_id
+        FROM package,
+             package_extra,
+             resource_group,
+             resource,
+             package_tag,
+             tag
+        WHERE package.id = package_extra.package_id
+          AND package.state='active'
+          AND resource_group.package_id=package.id
+          AND resource_group.id = resource.resource_group_id
+          AND package_tag.package_id = package.id
+          AND tag.id = package_tag.tag_id
+          AND tag.name LIKE '%usgincm:%'
+        GROUP BY package.id
+        HAVING COUNT(resource.id)=1;
+        """
+
+        rows = model.Session.execute(sql)
+        r    = self._redis_connection()
+
+        # delete the queue before we add the fresh elements
+        if r.exists('publish_ogc_queue'):
+            r.delete('publish_ogc_queue')
+
+        for row in rows:
+            # push the dataset ids to the redis queue
+            r.rpush('publish_ogc_queue', row.package_id)
+
+    def _redis_connection(self):
+        # redis connection
+        try:
+            r = redis.StrictRedis(
+                host=config.get('ckan.harvest.mq.hostname', HOSTNAME),
+                port=int(config.get('ckan.harvest.mq.port', REDIS_PORT)),
+                db=int(config.get('ckan.harvest.mq.redis_db', REDIS_DB))
+            )
+            return r
+        except:
+            print "Error Connecting to Redis while building publish_ogc_queue"
