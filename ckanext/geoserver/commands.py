@@ -175,18 +175,24 @@ class SetupDatastoreCommand(cli.CkanCommand):
         action has been performed before
         ''' 
         # get all usgin datasets that have not been published yet
-        sql="SELECT DISTINCT package.id AS package_id \
-             FROM package, \
-                 package_extra, \
-                 resource_group, \
-                 resource \
-             WHERE package.id = package_extra.package_id \
-             AND package.state='active' \
-             AND package_extra.value LIKE '%usginContentModel%' \
-             AND resource_group.package_id=package.id \
-             AND resource_group.id = resource.resource_group_id \
-             GROUP BY package.id \
-             HAVING COUNT(resource.id)=1;"
+        sql="""
+        SELECT DISTINCT package.id AS package_id
+        FROM package,
+             package_extra,
+             resource_group,
+             resource,
+             package_tag,
+             tag
+        WHERE package.id = package_extra.package_id
+          AND package.state='active'
+          AND resource_group.package_id=package.id
+          AND resource_group.id = resource.resource_group_id
+          AND package_tag.package_id = package.id
+          AND tag.id = package_tag.tag_id
+          AND tag.name LIKE '%usgincm:%'
+        GROUP BY package.id
+        HAVING COUNT(resource.id)=1;
+        """
 
         rows = model.Session.execute(sql)
 
