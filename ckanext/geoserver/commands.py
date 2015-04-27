@@ -5,48 +5,38 @@ import pylons
 import redis
 import pprint
 import sys
+import usginmodels
 import ckan.lib.cli as cli
 from ckan.lib.base import (model, c, config)
 from ckan.plugins import toolkit
+from ckanext.metadata.logic import action as get_meta_action
 
 HOSTNAME   = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB   = 0
 
 
-#pp = pprint.PrettyPrinter(indent=4)
+pp = pprint.PrettyPrinter(indent=4)
 
 log = logging.getLogger(__name__)
 
 class SetupDatastoreCommand(cli.CkanCommand):
     '''Perform commands to set up the datastore.
-    Make sure that the datastore urls are set properly before you run these commands.
-
-    Usage::
-
-        paster datastore set-permissions SQL_SUPER_USER
-
-    Where:
-        SQL_SUPER_USER is the name of a postgres user with sufficient
-                         permissions to create new tables, users, and grant
-                         and revoke new permissions.  Typically, this would
-                         be the "postgres" user.
-
-
-    Usage::
-
-        paster geoserver publish-ogc PACKAGE_ID
-
-    Where:
-        PACKAGE_ID is the ID of the dataset that needs to be published to OGC
+    Commands:
+        paster geoserver publish-ogc PACKAGE_ID     - publishes dataset with PACKAGE_ID to geoserver
+        paster geoserver publish-ogc-all            - publishes all datasets that follow the usgin model to geoserver
+        paster geoserver publish-ogc-redis-queue    - creates a redis queue with datasets id that will be published to geoserver
+        paster geoserver publish-ogc-worker         - start a worker process that polls the redis queue for new datasets 
+                                                      and publishes them to the geoserver
 
     '''
     summary = __doc__.split('\n')[0]
     usage = __doc__
 
-    def __init__(self, name):
 
+    def __init__(self, name):
         super(SetupDatastoreCommand, self).__init__(name)
+
 
     def command(self):
         '''
@@ -59,32 +49,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
         cmd = self.args[0]
         self._load_config()
 
-
-        if cmd == 'set-permissions':
-            '''
-            self.db_write_url_parts = cli.parse_db_config('ckan.datastore.write_url')
-            self.db_read_url_parts = cli.parse_db_config('ckan.datastore.read_url')
-            self.db_ckan_url_parts = cli.parse_db_config('sqlalchemy.url')
-
-            assert self.db_write_url_parts['db_name'] == self.db_read_url_parts['db_name'],\
-                "write and read db have to be the same"
-
-            if len(self.args) != 2:
-                print self.usage
-                return
-
-            setup.set_permissions(
-                pguser=self.args[1],
-                ckandb=self.db_ckan_url_parts['db_name'],
-                datastoredb=self.db_write_url_parts['db_name'],
-                ckanuser=self.db_ckan_url_parts['db_user'],
-                writeuser=self.db_write_url_parts['db_user'],
-                readonlyuser=self.db_read_url_parts['db_user']
-            )
-            if self.verbose:
-                print 'Set permissions for read-only user: SUCCESS'
-            '''
-        elif cmd == 'publish-ogc':
+        if cmd == 'publish-ogc':
             if len(self.args) != 2:
                 print self.usage
                 return
@@ -102,6 +67,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
             print self.usage
             log.error('Command "%s" not recognized' % (cmd,))
             return
+
 
     def publish_ogc(self, package_id):
         '''
@@ -133,8 +99,10 @@ class SetupDatastoreCommand(cli.CkanCommand):
                 resource_id = u'' + resource['id']
                 break
 
+
 	# get layer from package
 	try:
+
 	    md_package = None
 	    extras     = pkg.get('extras', [])
 
@@ -143,16 +111,32 @@ class SetupDatastoreCommand(cli.CkanCommand):
                 if key == 'md_package':
                     md_package = json.loads(extra.get('value'))
                     break
-                
-	    resourceDescription = md_package.get('resourceDescription', {})
+
+            resourceDescription = md_package.get('resourceDescription', {})
 	    layer               = resourceDescription.get('usginContentModelLayer', resource_id)
 	    version             = resourceDescription.get('usginContentModelVersion', None)
+
+            # handle harvested datasets that do not have a md_package
+            if layer == resource_id and version == None:
+                usgin_tag = []
+
+                for tag in pkg['tags']:
+                    if tag['name'].startswith('usgincm:'):
+                        usgin_tag.append(tag['name']) 
+
+                for key,value in (get_meta_action.get_usgin_prefix()).iteritems():
+                    if reduce(lambda v1,v2: v1 or v2, map(lambda v: v in usgin_tag, value)):
+                        key_arr = key.split("+")
+                        break
+
+                layer   = key_arr[1]
+                version = key_arr[2] 
+
 
 	except:
 	    return result
 
         layer_name     = layer
-	#workspace_name = package_id + '-' + layer_name
 	workspace_name = u'' + package_id + '-' + layer_name
 
 	try:
@@ -176,6 +160,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
             }
             #log.debug("An error occured while processing your request, please contact your administrator.")
             print "An error occured while processing your request, please contact your administrator."
+
     
     def publish_ogc_all(self):
         '''
@@ -203,11 +188,11 @@ class SetupDatastoreCommand(cli.CkanCommand):
         GROUP BY package.id
         HAVING COUNT(resource.id)=1;
         """
-
         rows = model.Session.execute(sql)
 
         for row in rows:
             self.publish_ogc(row.package_id)
+
 
     def publish_ogc_worker(self):
         '''
@@ -231,6 +216,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
 
             except:
                 log.debug('An Error has occured while publishing dataset:' + package_id + ' to GeoServer')
+
 
     def publish_ogc_redis_queue(self):
         '''
@@ -269,6 +255,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
         for row in rows:
             # push the dataset ids to the redis queue
             r.rpush('publish_ogc_queue', row.package_id)
+
 
     def _redis_connection(self):
         # redis connection
