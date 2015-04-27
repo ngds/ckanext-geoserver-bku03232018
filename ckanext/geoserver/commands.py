@@ -216,13 +216,21 @@ class SetupDatastoreCommand(cli.CkanCommand):
         ''' 
         r = self._redis_connection()
 
-        # POP an element (package_id) from publis_ogc_queue and publish it to ogc
-        package_id = r.lpop('publish_ogc_queue') 
+        # Lovely infinite loop ;P, we do need them from time to time
+        while True:
+            # POP an element (package_id) from publis_ogc_queue and publish it to ogc
+            try:
+                # we need to slow down this loop by setting the blpop timeout to 5 seconds
+                # when publish_ogc_queue is empty
+                queue_task = r.blpop('publish_ogc_queue', 5) 
 
-        try:
-            self.publish_ogc(package_id)
-        except:
-            print 'An Error has occured while publishing dataset:' + package_id + ' to GeoServer'
+                if queue_task is not None:
+                    package_id = queue_task[1] 
+                    self.publish_ogc(package_id)
+                    log.debug('Dataset: ' + package_id + ' has been published to the GeoServer')
+
+            except:
+                log.debug('An Error has occured while publishing dataset:' + package_id + ' to GeoServer')
 
     def publish_ogc_redis_queue(self):
         '''
@@ -272,4 +280,4 @@ class SetupDatastoreCommand(cli.CkanCommand):
             )
             return r
         except:
-            print "Error Connecting to Redis while building publish_ogc_queue"
+            log.debug('Error Connecting to Redis while building publish_ogc_queue')
