@@ -2,8 +2,10 @@ from ckan.lib.navl.dictization_functions import unflatten
 from ckan.lib.base import (request, BaseController, model, c, response, abort)
 from ckan.model.resource import Resource
 import ckanext.geoserver.logic.action as action
+import usginmodels
 from pylons.decorators import jsonify
 from ckan.logic import (tuplize_dict, clean_dict, parse_params)
+from ckanext.metadata.logic import action as get_meta_action
 #from ckanext.geoserver.model.Geoserver import Geoserver
 from ckan.plugins import toolkit
 from ckan.common import request, response
@@ -45,18 +47,36 @@ class OgcController(BaseController):
 	#get layer from package
 	try:
 	    md_package = None
-	    pkg = toolkit.get_action('package_show')(context, {'id': package_id})
-
-	    extras = pkg.get('extras', [])
+	    pkg        = toolkit.get_action('package_show')(context, {'id': package_id})
+	    extras     = pkg.get('extras', [])
 
             for extra in extras:
                 key = extra.get('key', None)
                 if key == 'md_package':
                     md_package = json.loads(extra.get('value'))
                     break
+
 	    resourceDescription = md_package.get('resourceDescription', {})
 	    layer = resourceDescription.get('usginContentModelLayer', resource_id)
 	    version = resourceDescription.get('usginContentModelVersion', None)
+
+            # handle harvested datasets that do not have a md_package
+            
+            if layer == resource_id and version == None:
+                usgin_tag = []
+
+                for tag in pkg['tags']:
+                    if tag['name'].startswith('usgincm:'):
+                        usgin_tag.append(tag['name']) 
+
+                for key,value in (get_meta_action.get_usgin_prefix()).iteritems():
+                    if reduce(lambda v1,v2: v1 or v2, map(lambda v: v in usgin_tag, value)):
+                        key_arr = key.split("+")
+                        break
+
+                layer   = key_arr[1]
+                version = key_arr[2] 
+            
 	except:
 	    return result
 
