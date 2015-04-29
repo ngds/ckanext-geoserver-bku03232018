@@ -229,13 +229,11 @@ class SetupDatastoreCommand(cli.CkanCommand):
         sql="""
         SELECT DISTINCT package.id AS package_id
         FROM package,
-             package_extra,
              resource_group,
              resource,
              package_tag,
              tag
-        WHERE package.id = package_extra.package_id
-          AND package.state='active'
+        WHERE package.state='active'
           AND resource_group.package_id=package.id
           AND resource_group.id = resource.resource_group_id
           AND package_tag.package_id = package.id
