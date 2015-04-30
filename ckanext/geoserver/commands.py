@@ -5,25 +5,30 @@ import pylons
 import redis
 import pprint
 import sys
+import uuid
 import usginmodels
+import datetime
+import string
+import random
 import ckan.lib.cli as cli
 from ckan.lib.base import (model, c, config)
 from ckan.plugins import toolkit
 from ckanext.metadata.logic import action as get_meta_action
+from ckan.lib.search import rebuild, commit
 
 HOSTNAME   = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB   = 0
 
 
-pp = pprint.PrettyPrinter(indent=4)
-
+pp  = pprint.PrettyPrinter(indent=4)
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 class SetupDatastoreCommand(cli.CkanCommand):
     '''Perform commands to set up the datastore.
     Commands:
-        paster geoserver publish-ogc PACKAGE_ID     - publishes dataset with PACKAGE_ID to geoserver
+        paster geoserver publish-ogc <PACKAGE_ID>   - publishes dataset with PACKAGE_ID to geoserver
         paster geoserver publish-ogc-all            - publishes all datasets that follow the usgin model to geoserver
         paster geoserver publish-ogc-redis-queue    - creates a redis queue with datasets id that will be published to geoserver
         paster geoserver publish-ogc-worker         - start a worker process that polls the redis queue for new datasets 
@@ -55,14 +60,17 @@ class SetupDatastoreCommand(cli.CkanCommand):
                 return
 
             package_id = u'' + self.args[1]
-
             self.publish_ogc(package_id)
+
         elif cmd == 'publish-ogc-all':
             self.publish_ogc_all()
+
         elif cmd == 'publish-ogc-worker':
             self.publish_ogc_worker()
+
         elif cmd == 'publish-ogc-redis-queue':
             self.publish_ogc_redis_queue()
+
         else:
             print self.usage
             log.error('Command "%s" not recognized' % (cmd,))
@@ -113,11 +121,11 @@ class SetupDatastoreCommand(cli.CkanCommand):
                     break
 
             resourceDescription = md_package.get('resourceDescription', {})
-	    layer               = resourceDescription.get('usginContentModelLayer', resource_id)
+	    layer_name          = resourceDescription.get('usginContentModelLayer', resource_id)
 	    version             = resourceDescription.get('usginContentModelVersion', None)
 
             # handle harvested datasets that do not have a md_package
-            if layer == resource_id and version == None:
+            if layer_name == resource_id and version == None:
                 usgin_tag = []
 
                 for tag in pkg['tags']:
@@ -129,15 +137,21 @@ class SetupDatastoreCommand(cli.CkanCommand):
                         key_arr = key.split("+")
                         break
 
-                layer   = key_arr[1]
-                version = key_arr[2] 
+                layer_name  = key_arr[1]
+                version     = u'' + key_arr[2] 
 
 
 	except:
-	    return result
+            print str(datetime.datetime.now()) + ' PUBLISH_OGC: ERROR, Could not get required API CALL parameters for dataset ' + package_id
+            sys.stdout.flush()
 
-        layer_name     = layer
-	workspace_name = u'' + package_id + '-' + layer_name
+        # generate a unique workspace_name
+        # layer_uuid     = str(uuid.uuid4()) 
+        # workspace_name = layer_uuid.replace('-','') + layer_name
+
+        # for some reason geoserver publishing works with workspaces made up of letters ONLY
+        layer_uuid     = ''.join(random.choice(string.ascii_uppercase) for _ in range(32))
+        workspace_name = layer_uuid.replace('-','') + layer_name
 
 	try:
 	    result = toolkit.get_action('geoserver_publish_ogc')(context, {
@@ -150,16 +164,12 @@ class SetupDatastoreCommand(cli.CkanCommand):
                 'col_longitude'  : lng_field, 
                 'layer_version'  : version})
 
-            #log.debug("Dataset: " + package_id + " has been successfully published to the GeoServer" )
-            print "Dataset: " + package_id + " has been successfully published to the GeoServer"
+            print str(datetime.datetime.now()) + ' PUBLISH_OGC: Dataset ' + package_id + ' HAS been published to the GeoServer'
+            sys.stdout.flush()
 
 	except:
-	    error = {
-                'success': False,
-                'message': toolkit._("An error occured while processing your request, please contact your administrator.")
-            }
-            #log.debug("An error occured while processing your request, please contact your administrator.")
-            print "An error occured while processing your request, please contact your administrator."
+            print str(datetime.datetime.now()) + ' PUBLISH_OGC: ERROR, Dataset ' + package_id + ' has NOT published to the GeoServer'
+            sys.stdout.flush()
 
     
     def publish_ogc_all(self):
@@ -199,7 +209,16 @@ class SetupDatastoreCommand(cli.CkanCommand):
         Publish dataset wms/wfs to geoserver by pop-ing
         an element (dataset id) from the publis_ogc_queue(redis)
         ''' 
-        r = self._redis_connection()
+
+        print str(datetime.datetime.now()) + ' PUBLISH_OGC_WORKER: Started the worker process'
+        # flush stdout see https://github.com/Supervisor/supervisor/issues/13
+        sys.stdout.flush()
+        try:
+            r = self._redis_connection()
+        except:
+            print str(datetime.datetime.now()) + ' PUBLISH_OGC_WORKER: ERROR, could not connect to Redis '
+            sys.stdout.flush()
+            
 
         # Lovely infinite loop ;P, we do need them from time to time
         while True:
@@ -207,15 +226,24 @@ class SetupDatastoreCommand(cli.CkanCommand):
             try:
                 # we need to slow down this loop by setting the blpop timeout to 5 seconds
                 # when publish_ogc_queue is empty
+                
                 queue_task = r.blpop('publish_ogc_queue', 5) 
 
                 if queue_task is not None:
                     package_id = queue_task[1] 
+                    print str(datetime.datetime.now()) + ' PUBLISH_OGC_WORKER: Start publishing dataset: ' + package_id
+                    sys.stdout.flush()
                     self.publish_ogc(package_id)
-                    log.debug('Dataset: ' + package_id + ' has been published to the GeoServer')
+
+                    # rebuild solr index for this dataset to avoid duplicate datasets in search results
+                    rebuild(package_id)
+                    commit()
+
 
             except:
-                log.debug('An Error has occured while publishing dataset:' + package_id + ' to GeoServer')
+                print str(datetime.datetime.now()) + ' PUBLISH_OGC_WORKER: An Error has occured while publishing dataset:' + package_id + ' to GeoServer'
+                sys.stdout.flush()
+
 
 
     def publish_ogc_redis_queue(self):
@@ -250,9 +278,18 @@ class SetupDatastoreCommand(cli.CkanCommand):
         if r.exists('publish_ogc_queue'):
             r.delete('publish_ogc_queue')
 
-        for row in rows:
-            # push the dataset ids to the redis queue
-            r.rpush('publish_ogc_queue', row.package_id)
+        count = 0 
+
+        try:
+            for row in rows:
+                # push the dataset ids to the redis queue
+                if r.rpush('publish_ogc_queue', row.package_id):
+                    count += 1
+
+            print str(datetime.datetime.now()) + ' PUBLISH_OGC_QUEUE: Pushed %d IDs to the publish_ogc_queue SUCCESSFULLY' % (count)
+        except:
+            print str(datetime.datetime.now()) + ' PUBLISH_OGC_QUEUE: There was en ERROR while pushing ids to publish_ogc_queue'
+            
 
 
     def _redis_connection(self):
@@ -265,4 +302,4 @@ class SetupDatastoreCommand(cli.CkanCommand):
             )
             return r
         except:
-            log.debug('Error Connecting to Redis while building publish_ogc_queue')
+            print str(datetime.datetime.now()) + ' PUBLISH_OGC: Error Connecting to Redis while building publish_ogc_queue'
