@@ -8,6 +8,7 @@ import sys
 import uuid
 import usginmodels
 import datetime
+import time
 import string
 import random
 import ckan.lib.cli as cli
@@ -243,6 +244,8 @@ class SetupDatastoreCommand(cli.CkanCommand):
             except:
                 print str(datetime.datetime.now()) + ' PUBLISH_OGC_WORKER: An Error has occured while publishing dataset:' + package_id + ' to GeoServer'
                 sys.stdout.flush()
+                # retry in 30 seconds if something went south
+                time.sleep(30)
 
 
 
