@@ -258,20 +258,28 @@ class SetupDatastoreCommand(cli.CkanCommand):
         # todo: check config for backend redis/rabbitmq
         # get all usgin datasets that have not been published yet
         sql="""
-        SELECT DISTINCT package.id AS package_id
+        SELECT package.id AS package_id
         FROM package,
-             resource_group,
-             resource,
              package_tag,
              tag
         WHERE package.state='active'
-          AND resource_group.package_id=package.id
-          AND resource_group.id = resource.resource_group_id
           AND package_tag.package_id = package.id
           AND tag.id = package_tag.tag_id
           AND tag.name LIKE '%usgincm:%'
-        GROUP BY package.id
-        HAVING COUNT(resource.id)=1;
+          AND package.id NOT IN
+            (SELECT DISTINCT package.id AS package_id
+             FROM package,
+                  resource_group,
+                  resource,
+                  package_tag,
+                  tag
+             WHERE package.state='active'
+               AND resource_group.package_id=package.id
+               AND resource_group.id = resource.resource_group_id
+               AND package_tag.package_id = package.id
+               AND tag.id = package_tag.tag_id
+               AND tag.name LIKE '%usgincm:%'
+               AND resource.extras LIKE '%url_ogc%');
         """
 
         rows = model.Session.execute(sql)
