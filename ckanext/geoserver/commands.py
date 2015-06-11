@@ -104,7 +104,8 @@ class SetupDatastoreCommand(cli.CkanCommand):
 	resources   = pkg.get('resources', [])
 
         for resource in resources:
-            if resource['format'].lower() == 'csv':
+            #if resource['format'].lower() == 'csv':
+            if "NGDS Tier 3 Data, csv format:".lower() in resource['name'].lower():
                 resource_id = u'' + resource['id']
                 break
 
@@ -140,7 +141,6 @@ class SetupDatastoreCommand(cli.CkanCommand):
 
                 layer_name  = key_arr[1]
                 version     = u'' + key_arr[2] 
-
 
 	except:
             print str(datetime.datetime.now()) + ' PUBLISH_OGC: ERROR, Could not get required API CALL parameters for dataset ' + package_id
@@ -182,23 +182,30 @@ class SetupDatastoreCommand(cli.CkanCommand):
         ''' 
         # get all usgin datasets that have not been published yet
         sql="""
-        SELECT DISTINCT package.id AS package_id
+        SELECT package.id AS package_id
         FROM package,
-             package_extra,
-             resource_group,
-             resource,
              package_tag,
              tag
-        WHERE package.id = package_extra.package_id
-          AND package.state='active'
-          AND resource_group.package_id=package.id
-          AND resource_group.id = resource.resource_group_id
+        WHERE package.state='active'
           AND package_tag.package_id = package.id
           AND tag.id = package_tag.tag_id
           AND tag.name LIKE '%usgincm:%'
-        GROUP BY package.id
-        HAVING COUNT(resource.id)=1;
+          AND package.id NOT IN
+            (SELECT DISTINCT package.id AS package_id
+             FROM package,
+                  resource_group,
+                  resource,
+                  package_tag,
+                  tag
+             WHERE package.state='active'
+               AND resource_group.package_id=package.id
+               AND resource_group.id = resource.resource_group_id
+               AND package_tag.package_id = package.id
+               AND tag.id = package_tag.tag_id
+               AND tag.name LIKE '%usgincm:%'
+               AND resource.extras LIKE '%url_ogc%');
         """
+
         rows = model.Session.execute(sql)
 
         for row in rows:
