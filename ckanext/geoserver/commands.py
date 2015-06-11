@@ -135,7 +135,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
                         usgin_tag.append(tag['name']) 
 
                 for key,value in (get_meta_action.get_usgin_prefix()).iteritems():
-                    if reduce(lambda v1,v2: v1 or v2, map(lambda v: v in usgin_tag, value)):
+                    if reduce(lambda v1,v2: v1 or v2, map(lambda v: v in usgin_tag[0].lower(), value[0].lower())):
                         key_arr = key.split("+")
                         break
 
