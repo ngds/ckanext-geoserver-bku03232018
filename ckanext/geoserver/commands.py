@@ -185,11 +185,15 @@ class SetupDatastoreCommand(cli.CkanCommand):
         SELECT package.id AS package_id
         FROM package,
              package_tag,
-             tag
+             tag,
+             package_extra
         WHERE package.state='active'
           AND package_tag.package_id = package.id
           AND tag.id = package_tag.tag_id
           AND tag.name LIKE '%usgincm:%'
+          AND package_extra.package_id = package.id
+          AND package_extra.key = 'md_package'
+          AND package_extra.value LIKE '%NGDS Tier 3 Data, csv format:%'
           AND package.id NOT IN
             (SELECT DISTINCT package.id AS package_id
              FROM package,
@@ -268,11 +272,15 @@ class SetupDatastoreCommand(cli.CkanCommand):
         SELECT package.id AS package_id
         FROM package,
              package_tag,
-             tag
+             tag,
+             package_extra
         WHERE package.state='active'
           AND package_tag.package_id = package.id
           AND tag.id = package_tag.tag_id
           AND tag.name LIKE '%usgincm:%'
+          AND package_extra.package_id = package.id
+          AND package_extra.key = 'md_package'
+          AND package_extra.value LIKE '%NGDS Tier 3 Data, csv format:%'
           AND package.id NOT IN
             (SELECT DISTINCT package.id AS package_id
              FROM package,
