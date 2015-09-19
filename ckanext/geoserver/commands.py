@@ -193,7 +193,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
           AND tag.name LIKE '%usgincm:%'
           AND package_extra.package_id = package.id
           AND package_extra.key = 'md_package'
-          AND package_extra.value LIKE '%NGDS Tier 3 Data, csv format:%'
+          AND package_extra.value LIKE '%NGDS Tier 3 Data, csv format%'
           AND package.id NOT IN
             (SELECT DISTINCT package.id AS package_id
              FROM package,
@@ -280,7 +280,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
           AND tag.name LIKE '%usgincm:%'
           AND package_extra.package_id = package.id
           AND package_extra.key = 'md_package'
-          AND package_extra.value LIKE '%NGDS Tier 3 Data, csv format:%'
+          AND package_extra.value LIKE '%NGDS Tier 3 Data, csv format%'
           AND package.id NOT IN
             (SELECT DISTINCT package.id AS package_id
              FROM package,
