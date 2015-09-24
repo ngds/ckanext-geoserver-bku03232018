@@ -105,7 +105,6 @@ class SetupDatastoreCommand(cli.CkanCommand):
 
         for resource in resources:
             #if resource['format'].lower() == 'csv':
-            if "NGDS Tier 3 Data, csv format:".lower() in resource['name'].lower():
                 resource_id = u'' + resource['id']
                 break
 
