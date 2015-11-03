@@ -132,10 +132,12 @@ class SetupDatastoreCommand(cli.CkanCommand):
 
                 for tag in pkg['tags']:
                     if tag['name'].startswith('usgincm:'):
-                        usgin_tag.append(tag['name']) 
+                        usgin_tag.append(tag['name'].lower())  
 
+				key_arr = []
                 for key,value in (get_meta_action.get_usgin_prefix()).iteritems():
-                    if reduce(lambda v1,v2: v1 or v2, map(lambda v: v in usgin_tag[0].lower(), value[0].lower())):
+					value = [x.lower() for x in value]
+                    if reduce(lambda v1,v2: v1 or v2, map(lambda v: v in usgin_tag, value)):
                         key_arr = key.split("+")
                         break
 
@@ -151,8 +153,8 @@ class SetupDatastoreCommand(cli.CkanCommand):
         # workspace_name = layer_uuid.replace('-','') + layer_name
 
         # for some reason geoserver publishing works with workspaces made up of letters ONLY
-        layer_uuid     = ''.join(random.choice(string.ascii_uppercase) for _ in range(32))
-        workspace_name = layer_uuid.replace('-','') + layer_name
+        layer_uuid     = ''.join(random.choice(string.ascii_uppercase) for _ in range(4))
+        workspace_name = layer_name + '-' + layer_uuid.replace('-','') 
 
 	try:
 	    result = toolkit.get_action('geoserver_publish_ogc')(context, {
@@ -202,6 +204,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
                   package_tag,
                   tag
              WHERE package.state='active'
+               AND resource.state ='active'
                AND resource_group.package_id=package.id
                AND resource_group.id = resource.resource_group_id
                AND package_tag.package_id = package.id
@@ -289,6 +292,7 @@ class SetupDatastoreCommand(cli.CkanCommand):
                   package_tag,
                   tag
              WHERE package.state='active'
+               AND resource.state ='active'
                AND resource_group.package_id=package.id
                AND resource_group.id = resource.resource_group_id
                AND package_tag.package_id = package.id
